@@ -3,6 +3,8 @@ from typing import TypeVar, Generic, Type, Any, Optional, List
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from pydantic import BaseModel
+from app.models.database_models import Category
+from app.schemas.schemas import CategoryBase
 
 # Importăm clasa de bază a bazei noastre de date
 from app.core.database import Base 
@@ -100,9 +102,36 @@ class UserRepository(BaseRepository[User, UserCreate]):
     def __init__(self):
         super().__init__(User)
 
-    # Metodă specifică doar pentru utilizatori
     def get_by_email(self, db: Session, email: str) -> Optional[User]:
         return db.query(User).filter(User.email == email).first()
+
+    # ==========================================
+    # POLIMORFISM OOP: Suprascriem metoda create
+    # ==========================================
+    def create(self, db: Session, obj_in: UserCreate) -> User:
+        # 1. Extragem datele din Pydantic sub formă de dicționar
+        obj_in_data = obj_in.model_dump()
+        
+        # 2. Scoatem cheia 'password' (care conține parola deja criptată din auth.py)
+        # și o salvăm într-o cheie nouă numită exact ca în baza de date: 'password_hash'
+        password_value = obj_in_data.pop("password")
+        obj_in_data["password_hash"] = password_value
+        
+        # 3. Salvăm în baza de date (acum SQLAlchemy va recunoaște coloana)
+        db_obj = self.model(**obj_in_data)
+        db.add(db_obj)
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
+
+class CategoryRepository(BaseRepository[Category, CategoryBase]):
+    """
+    Clasa specifică pentru manipularea Categoriilor.
+    """
+    def __init__(self):
+        super().__init__(Category)
+
+category_repo = CategoryRepository()
 
 # Instanțiem repository-urile pentru a le putea folosi în rute
 book_repo = BookRepository()
