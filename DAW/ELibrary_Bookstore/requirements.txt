@@ -2,8 +2,9 @@ fastapi
 uvicorn
 SQLAlchemy
 psycopg[binary]
-pydantic
+pydantic[email]
 python-multipart
 bcrypt
 PyJWT
 stripe
+passlib 
