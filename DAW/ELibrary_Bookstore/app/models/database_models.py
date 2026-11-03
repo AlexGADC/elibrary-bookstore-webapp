@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Boolean, Numeric, ForeignKey, DateTime, func
 from sqlalchemy.orm import relationship
 from app.core.database import Base
+from sqlalchemy.orm import Mapped, mapped_column
 
 # ==========================================
 # USER & ROLES MODELS
@@ -20,7 +21,7 @@ class Role(Base):
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     username = Column(String(100), nullable=False)
     email = Column(String(150), unique=True, index=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
@@ -57,7 +58,7 @@ class Book(Base):
     author_name = Column(String(150), nullable=False)
     category_id = Column(Integer, ForeignKey("categories.id", ondelete="SET NULL"))
     price = Column(Numeric(10, 2), nullable=False)
-    stock = Column(Integer, default=0)
+    stock: Mapped[int] = mapped_column(Integer, default=0)
     
     # Căile către fișierele încărcate
     cover_image_url = Column(String(255), nullable=True)  # .jpg / .png
