@@ -3,11 +3,12 @@ from sqlalchemy.orm import Session
 from typing import List
 from app.api.deps import get_current_user
 from app.models.database_models import User
-
-# Importăm ce am construit până acum
 from app.core.database import get_db
 from app.schemas.schemas import BookCreate, BookResponse
 from app.services.repository import book_repo
+from app.services.repository import transaction_repo
+from app.schemas.schemas import TransactionCreate, TransactionResponse
+from datetime import datetime, timedelta
 
 # Creăm un router special doar pentru secțiunea de cărți
 router = APIRouter(
@@ -56,3 +57,27 @@ def get_single_book(book_id: int, db: Session = Depends(get_db)):
             detail="Book not found."
         )
     return book
+
+@router.post("/{book_id}/buy", response_model=TransactionResponse, status_code=status.HTTP_201_CREATED)
+def buy_book_endpoint(
+    book_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Cumpără o carte definitiv. Stocul scade cu 1.
+    """
+    return transaction_repo.buy_book(db=db, user_id=current_user.id, book_id=book_id)
+
+
+@router.post("/{book_id}/borrow", response_model=TransactionResponse, status_code=status.HTTP_201_CREATED)
+def borrow_book_endpoint(
+    book_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Împrumută o carte pe o perioadă de 14 zile. 
+    Generează automat o dată de returnare (due_date).
+    """
+    return transaction_repo.borrow_book(db=db, user_id=current_user.id, book_id=book_id)

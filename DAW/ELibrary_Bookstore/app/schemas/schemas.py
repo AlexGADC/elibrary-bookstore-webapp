@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, ConfigDict
+from pydantic import BaseModel, EmailStr, ConfigDict, Field
 from typing import Optional, List
 from datetime import datetime
 
@@ -70,3 +70,22 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     email: Optional[str] = None
+
+class TransactionCreate(BaseModel):
+    """
+    Ce trimite utilizatorul când vrea să facă o tranzacție.
+    Nu îi cerem user_id pentru că îl luăm automat din token (Bodyguard).
+    """
+    transaction_type: str = Field(..., description="'borrow' sau 'purchase'")
+
+class TransactionResponse(BaseModel):
+    """Ce returnăm înapoi ca bon/chitanță."""
+    id: int
+    user_id: int
+    book_id: int
+    type: str                              
+    borrowed_at: datetime                   
+    due_date: Optional[datetime] = None     
+
+    class Config:
+        from_attributes = True

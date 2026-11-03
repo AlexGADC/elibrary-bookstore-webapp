@@ -5,6 +5,10 @@ from sqlalchemy import select
 from pydantic import BaseModel
 from app.models.database_models import Category
 from app.schemas.schemas import CategoryBase
+from fastapi import HTTPException, status
+from app.models.database_models import LoanPurchase
+from app.schemas.schemas import TransactionCreate
+from datetime import datetime, timedelta
 
 # Importăm clasa de bază a bazei noastre de date
 from app.core.database import Base 
@@ -131,8 +135,64 @@ class CategoryRepository(BaseRepository[Category, CategoryBase]):
     def __init__(self):
         super().__init__(Category)
 
-category_repo = CategoryRepository()
+class TransactionRepository(BaseRepository[LoanPurchase, TransactionCreate]):
+    
+    def __init__(self):
+        super().__init__(LoanPurchase)
+        
+    def buy_book(self, db: Session, user_id: int, book_id: int):
+        from app.models.database_models import Book
+        book = db.query(Book).filter(Book.id == book_id).first()
+        
+        if not book:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cartea nu a fost găsită.")
+        if book.stock <= 0:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cartea nu mai este în stoc pentru cumpărare!")
+            
+        book.stock -= 1
+        
+        # Cumpărarea este definitivă, nu are dată de returnare
+        new_transaction = LoanPurchase(
+            user_id=user_id,
+            book_id=book_id,
+            type="buy",
+            status="completed" # O cumpărare e gata din prima
+        )
+        
+        db.add(new_transaction)
+        db.commit()
+        db.refresh(new_transaction)
+        return new_transaction
 
-# Instanțiem repository-urile pentru a le putea folosi în rute
+    def borrow_book(self, db: Session, user_id: int, book_id: int, borrow_days: int = 14):
+        from app.models.database_models import Book
+        book = db.query(Book).filter(Book.id == book_id).first()
+        
+        if not book:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cartea nu a fost găsită.")
+        if book.stock <= 0:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Toate exemplarele sunt deja împrumutate!")
+            
+        book.stock -= 1
+        
+        # Calculăm data de returnare (astăzi + 14 zile)
+        due_date = datetime.now() + timedelta(days=borrow_days)
+        
+        new_transaction = LoanPurchase(
+            user_id=user_id,
+            book_id=book_id,
+            type="loan",
+            status="active", # Este activ până când user-ul o returnează
+            due_date=due_date
+        )
+        
+        db.add(new_transaction)
+        db.commit()
+        db.refresh(new_transaction)
+        return new_transaction
+
+
+transaction_repo = TransactionRepository()
+category_repo = CategoryRepository()
 book_repo = BookRepository()
 user_repo = UserRepository()
