@@ -54,10 +54,10 @@ class Book(Base):
     __tablename__ = "books"
 
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(String(200), nullable=False)
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
     author_name = Column(String(150), nullable=False)
     category_id = Column(Integer, ForeignKey("categories.id", ondelete="SET NULL"))
-    price = Column(Numeric(10, 2), nullable=False)
+    price: Mapped[float] = mapped_column(Numeric(10, 2))  
     stock: Mapped[int] = mapped_column(Integer, default=0)
     
     # Căile către fișierele încărcate
@@ -95,7 +95,7 @@ class LoanPurchase(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     book_id = Column(Integer, ForeignKey("books.id", ondelete="CASCADE"))
     type = Column(String(50), nullable=False)    # 'loan' sau 'purchase'
-    status = Column(String(50), nullable=False)  # 'active', 'returned', 'completed'
+    status: Mapped[str] = mapped_column(String(50), nullable=False)  # 'active', 'returned', 'completed'
     borrowed_at = Column(DateTime(timezone=True), server_default=func.now())
     due_date = Column(DateTime(timezone=True), nullable=True)
 
