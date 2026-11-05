@@ -56,14 +56,16 @@ class Book(Base):
     id = Column(Integer, primary_key=True, index=True)
     title: Mapped[str] = mapped_column(String(200), nullable=False)
     author_name = Column(String(150), nullable=False)
+    description = Column(String, nullable=True)
     category_id = Column(Integer, ForeignKey("categories.id", ondelete="SET NULL"))
     price: Mapped[float] = mapped_column(Numeric(10, 2))  
     stock: Mapped[int] = mapped_column(Integer, default=0)
     
     # Căile către fișierele încărcate
-    cover_image_url = Column(String(255), nullable=True)  # .jpg / .png
+    cover_image_url: Mapped[str] = mapped_column(String(255), nullable=True)  # .jpg / .png
     digital_file_url = Column(String(255), nullable=True) # .pdf (max 12 MB)
     is_digital = Column(Boolean, default=False)
+    is_physical = Column(Boolean, default=True)
 
     # Relații
     category = relationship("Category", back_populates="books")

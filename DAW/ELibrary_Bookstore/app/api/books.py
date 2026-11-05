@@ -13,6 +13,10 @@ import stripe
 import os
 import stripe
 from dotenv import load_dotenv
+import shutil
+from fastapi import UploadFile, File
+from app.models.database_models import Book
+from app.schemas.schemas import BookUpdate
 
 # Încărcăm variabilele din fișierul .env în memorie
 load_dotenv()
@@ -64,6 +68,45 @@ def payment_success_endpoint(
         raise HTTPException(status_code=400, detail=f"Eroare de la Stripe: {str(e)}")
 
 
+@router.post("/{book_id}/upload-cover")
+def upload_book_cover(
+    book_id: int, 
+    file: UploadFile = File(...), 
+    db: Session = Depends(get_db)
+):
+    """
+    Ruta pentru a încărca o copertă (imagine) pentru o carte specifică.
+    """
+    # 1. Căutăm cartea în baza de date
+    book = db.query(Book).filter(Book.id == book_id).first()
+    if not book:
+        raise HTTPException(status_code=404, detail="Cartea nu a fost găsită.")
+        
+    # 2. Validăm că e o imagine (opțional, dar recomandat)
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Fișierul trebuie să fie o imagine (.jpg, .png, etc.)")
+    
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="Fișierului îi lipsește numele.")
+    
+    file_extension = file.filename.split(".")[-1]
+    file_name = f"cover_{book_id}.{file_extension}"
+    file_path = f"uploads/covers/{file_name}"
+    
+    # 4. Salvăm fizic fișierul pe disk-ul serverului
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    # 5. Salvăm link-ul copertii în baza de date
+    # Presupun că modelul tău Book are o coloană numită cover_image_url (sau similară)
+    book.cover_image_url = f"/{file_path}"
+    db.commit()
+    
+    return {
+        "message": "Coperta a fost încărcată cu succes!", 
+        "cover_url": book.cover_image_url
+    }
+
 @router.post("/", response_model=BookResponse, status_code=status.HTTP_201_CREATED)
 def create_new_book(
     book_in: BookCreate, 
@@ -83,6 +126,33 @@ def create_new_book(
     new_book = book_repo.create(db=db, obj_in=book_in)
     return new_book
 
+@router.patch("/{book_id}")
+def update_book(
+    book_id: int, 
+    book_update: BookUpdate, # Aici primim datele noi de la client
+    db: Session = Depends(get_db)
+):
+    """
+    Actualizează detaliile unei cărți existente.
+    """
+    # 1. Căutăm cartea în baza de date
+    book = db.query(Book).filter(Book.id == book_id).first()
+    if not book:
+        raise HTTPException(status_code=404, detail="Cartea nu a fost găsită.")
+    
+    # 2. Extragem DOAR câmpurile care au fost trimise efectiv (ignorăm ce e None)
+    # exclude_unset=True este magia Pydantic care ne dă doar ce a tastat userul
+    update_data = book_update.dict(exclude_unset=True)
+    
+    # 3. Aplicăm modificările pe obiectul book
+    for key, value in update_data.items():
+        setattr(book, key, value) # Schimbă valoarea curentă cu cea nouă
+        
+    # 4. Salvăm modificările
+    db.commit()
+    db.refresh(book) # Ne asigurăm că avem ultimele date
+    
+    return {"message": "Cartea a fost actualizată cu succes!", "book": book}
 
 @router.get("/", response_model=List[BookResponse])
 def get_all_books(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
