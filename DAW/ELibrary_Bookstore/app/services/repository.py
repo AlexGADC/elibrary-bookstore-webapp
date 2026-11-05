@@ -223,6 +223,21 @@ class TransactionRepository(BaseRepository[LoanPurchase, TransactionCreate]):
         
         return transaction
 
+    def complete_transaction(self, db: Session, transaction_id: int):
+        """Marchează tranzacția ca fiind plătită (completed)."""
+        from app.models.database_models import LoanPurchase
+        
+        # 1. Găsim bonul în baza de date
+        transaction = db.query(LoanPurchase).filter(LoanPurchase.id == transaction_id).first()
+        
+        # 2. Dacă există și era în așteptare, îl marcăm ca finalizat
+        if transaction and transaction.status == "pending":
+            transaction.status = "completed"
+            db.commit()
+            db.refresh(transaction)
+            
+        return transaction
+
 
 transaction_repo = TransactionRepository()
 category_repo = CategoryRepository()

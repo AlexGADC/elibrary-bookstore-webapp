@@ -20,6 +20,40 @@ router = APIRouter(
     tags=["Books Catalog"]
 )
 
+@router.get("/payment-success")
+def payment_success_endpoint(
+    session_id: str, 
+    transaction_id: int, 
+    db: Session = Depends(get_db)
+):
+    """
+    Ruta unde este redirecționat utilizatorul după ce plătește pe Stripe.
+    Aici verificăm la Stripe dacă plata a fost reală și actualizăm baza de date.
+    """
+    try:
+        # 1. Îl întrebăm pe Stripe care este statusul oficial al acestei sesiuni
+        checkout_session = stripe.checkout.Session.retrieve(session_id)
+        
+        # 2. Dacă a plătit cu succes
+        if checkout_session.payment_status == "paid":
+            # Actualizăm bonul în "completed"
+            transaction = transaction_repo.complete_transaction(db=db, transaction_id=transaction_id)
+            
+            if not transaction:
+                raise HTTPException(status_code=404, detail="Tranzacția nu a fost găsită.")
+            
+            return {
+                "message": "Plata a fost realizată cu succes! Cartea este acum a ta.", 
+                "transaction_id": transaction_id, 
+                "status": transaction.status
+            }
+        else:
+            return {"message": f"Plata încă nu a fost finalizată. Status curent: {checkout_session.payment_status}"}
+            
+    except stripe.StripeError as e:
+        raise HTTPException(status_code=400, detail=f"Eroare de la Stripe: {str(e)}")
+
+
 @router.post("/", response_model=BookResponse, status_code=status.HTTP_201_CREATED)
 def create_new_book(
     book_in: BookCreate, 
@@ -98,7 +132,11 @@ def buy_book_endpoint(
             'quantity': 1,
         }],
         mode='payment',
-        success_url="http://localhost:8000/docs", # Îl trimitem înapoi în Swagger dacă a plătit cu succes
+        
+        # AICI E MODIFICAREA MAGICA: 
+        # Îi zicem lui Stripe să pună ID-ul sesiunii lui și ID-ul tranzacției noastre în noul link
+        success_url=f"http://localhost:8000/books/payment-success?session_id={{CHECKOUT_SESSION_ID}}&transaction_id={transaction.id}",
+        
         cancel_url="http://localhost:8000/docs",
     )
 
@@ -111,9 +149,8 @@ def buy_book_endpoint(
         "status": transaction.status,
         "borrowed_at": transaction.borrowed_at,
         "due_date": transaction.due_date,
-        "payment_url": checkout_session.url  # <--- URL-ul generat de Stripe
+        "payment_url": checkout_session.url  
     }
-
 
 @router.post("/{book_id}/borrow", response_model=TransactionResponse, status_code=status.HTTP_201_CREATED)
 def borrow_book_endpoint(
