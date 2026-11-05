@@ -83,9 +83,11 @@ class TransactionResponse(BaseModel):
     id: int
     user_id: int
     book_id: int
-    type: str                              
+    type: str    
+    status: str                          
     borrowed_at: datetime                   
-    due_date: Optional[datetime] = None     
+    due_date: Optional[datetime] = None  
+    payment_url: Optional[str] = None   
 
     class Config:
         from_attributes = True

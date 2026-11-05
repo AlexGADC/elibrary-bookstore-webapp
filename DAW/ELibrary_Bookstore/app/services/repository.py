@@ -151,12 +151,11 @@ class TransactionRepository(BaseRepository[LoanPurchase, TransactionCreate]):
             
         book.stock -= 1
         
-        # Cumpărarea este definitivă, nu are dată de returnare
         new_transaction = LoanPurchase(
             user_id=user_id,
             book_id=book_id,
             type="buy",
-            status="completed" # O cumpărare e gata din prima
+            status="pending"  # <--- Modificat din 'completed'
         )
         
         db.add(new_transaction)
@@ -190,6 +189,39 @@ class TransactionRepository(BaseRepository[LoanPurchase, TransactionCreate]):
         db.commit()
         db.refresh(new_transaction)
         return new_transaction
+    
+
+    def return_book(self, db: Session, user_id: int, book_id: int):
+        from app.models.database_models import Book
+        
+        # 1. Căutăm împrumutul ACTIV al acestui user pentru această carte
+        transaction = db.query(self.model).filter(
+            self.model.user_id == user_id,
+            self.model.book_id == book_id,
+            self.model.type == "loan",
+            self.model.status == "active"
+        ).first()
+        
+        if not transaction:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, 
+                detail="Nu ai un împrumut activ pentru această carte."
+            )
+            
+        # 2. Găsim cartea în baza de date
+        book = db.query(Book).filter(Book.id == book_id).first()
+        if book:
+            # 3. Creștem stocul la loc!
+            book.stock += 1
+            
+        # 4. Schimbăm statusul bonului din 'active' în 'returned'
+        transaction.status = "returned"
+        
+        # 5. Salvăm totul
+        db.commit()
+        db.refresh(transaction)
+        
+        return transaction
 
 
 transaction_repo = TransactionRepository()
