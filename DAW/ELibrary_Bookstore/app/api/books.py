@@ -10,9 +10,19 @@ from app.services.repository import transaction_repo
 from app.schemas.schemas import TransactionCreate, TransactionResponse
 from datetime import datetime, timedelta
 import stripe
+import os
+import stripe
+from dotenv import load_dotenv
 
-# Python test key
-stripe.api_key = ""
+# Încărcăm variabilele din fișierul .env în memorie
+load_dotenv()
+
+# Citim cheia direct din mediul de rulare, în loc să o scriem în clar
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+
+# Dacă cheia nu e găsită, oprim aplicația preventiv ca să nu crape la plată
+if not stripe.api_key:
+    raise ValueError("STRIPE_SECRET_KEY lipsește din fișierul .env!")
 
 # Creăm un router special doar pentru secțiunea de cărți
 router = APIRouter(
