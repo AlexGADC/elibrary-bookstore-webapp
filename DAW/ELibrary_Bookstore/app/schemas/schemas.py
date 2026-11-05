@@ -23,9 +23,11 @@ class CategoryResponse(CategoryBase):
 class BookBase(BaseModel):
     title: str
     author_name: str
+    description: Optional[str] = None
     price: float
     stock: Optional[int] = 0
     is_digital: Optional[bool] = False
+    is_physical: Optional[bool] = True
 
 class BookCreate(BookBase):
     # Când adminul creează o carte, are nevoie și de un ID pentru categorie
@@ -39,6 +41,16 @@ class BookResponse(BookBase):
     digital_file_url: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+class BookUpdate(BaseModel):
+    title: Optional[str] = None
+    author_name: Optional[str] = None
+    description: Optional[str] = None   
+    price: Optional[float] = None
+    stock: Optional[int] = None
+    is_digital: Optional[bool] = None
+    is_physical: Optional[bool] = None
+    category_id: Optional[int] = None
 
 # ==========================================
 # USER SCHEMAS (Autentificare & Înregistrare)

@@ -3,14 +3,15 @@ from app.core.database import engine, Base
 from app.api.books import router as books_router
 from app.api.categories import router as categories_router
 from app.api.auth import router as auth_router
+import os
+from fastapi.staticfiles import StaticFiles
 
-
-
-# 1. COMANDA MAGICĂ: Crearea automată a tabelelor în PostgreSQL
-# Dacă tabelele nu există (sau adaugi coloane noi), SQLAlchemy le generează
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="ELibrary & Bookstore API")
+
+os.makedirs("uploads/covers", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 app.include_router(books_router)
 app.include_router(categories_router)
