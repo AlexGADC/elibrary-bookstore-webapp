@@ -5,7 +5,7 @@ from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 DATABASE_URL = "postgresql+psycopg://postgres:postgres@localhost:5432/ELibrary_Bookstore_db"
 
-engine = create_engine(DATABASE_URL, echo=True) 
+engine = create_engine(DATABASE_URL, echo=False) 
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

@@ -23,9 +23,9 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     username = Column(String(100), nullable=False)
-    email = Column(String(150), unique=True, index=True, nullable=False)
+    email: Mapped[str] = mapped_column(String(150), unique=True, index=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
-    role_id = Column(Integer, ForeignKey("roles.id", ondelete="SET NULL"))
+    role_id: Mapped[int] = mapped_column(Integer, ForeignKey("roles.id", ondelete="SET NULL"))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relațiile către celelalte entități
@@ -63,8 +63,8 @@ class Book(Base):
     
     # Căile către fișierele încărcate
     cover_image_url: Mapped[str] = mapped_column(String(255), nullable=True)  # .jpg / .png
-    digital_file_url = Column(String(255), nullable=True) # .pdf (max 12 MB)
-    is_digital = Column(Boolean, default=False)
+    digital_file_url: Mapped[str] = mapped_column(String(255), nullable=True) # .pdf (max 12 MB)
+    is_digital: Mapped[bool] = mapped_column(Boolean, default=False)
     is_physical = Column(Boolean, default=True)
 
     # Relații

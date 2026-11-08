@@ -2,16 +2,17 @@ from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-
+from app.core.logger import logger
 from app.core.database import get_db
+from app.schemas.schemas import UserCreate, UserResponse, Token
+from app.services.repository import user_repo
 from app.core.security import (
     get_password_hash, 
     verify_password, 
     create_access_token, 
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
-from app.schemas.schemas import UserCreate, UserResponse, Token
-from app.services.repository import user_repo
+
 
 router = APIRouter(
     prefix="/auth",
@@ -40,6 +41,9 @@ def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
     
     # 4. Creăm utilizatorul în baza de date
     new_user = user_repo.create(db=db, obj_in=user_in)
+
+    logger.info(f"USER REGISTERED: New account created for {new_user.email} (Role ID: {new_user.role_id}).") 
+
     return new_user
 
 
@@ -69,5 +73,7 @@ def login_for_access_token(
     access_token = create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
     )
+
+    logger.info(f"LOGIN SUCCESS: User {user.email} successfully logged into the system.")
     
     return {"access_token": access_token, "token_type": "bearer"}
