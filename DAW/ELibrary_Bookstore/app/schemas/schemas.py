@@ -1,10 +1,6 @@
 from pydantic import BaseModel, EmailStr, ConfigDict, Field
-from typing import Optional, List
+from typing import Optional
 from datetime import datetime
-
-# ==========================================
-# CATEGORY SCHEMAS
-# ==========================================
 
 class CategoryBase(BaseModel):
     name: str
@@ -13,12 +9,8 @@ class CategoryBase(BaseModel):
 class CategoryResponse(CategoryBase):
     id: int
 
-    # Această setare permite lui Pydantic să citească datele direct din obiectele SQLAlchemy
     model_config = ConfigDict(from_attributes=True)
 
-# ==========================================
-# BOOK SCHEMAS
-# ==========================================
 
 class BookBase(BaseModel):
     title: str
@@ -29,18 +21,19 @@ class BookBase(BaseModel):
     is_digital: Optional[bool] = False
     is_physical: Optional[bool] = True
 
+
 class BookCreate(BookBase):
-    # Când adminul creează o carte, are nevoie și de un ID pentru categorie
     category_id: int
 
+
 class BookResponse(BookBase):
-    # Când returnăm o carte către utilizator, includem și ID-ul și linkurile fișierelor
     id: int
     category_id: Optional[int]
     cover_image_url: Optional[str] = None
     digital_file_url: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class BookUpdate(BaseModel):
     title: Optional[str] = None
@@ -52,18 +45,14 @@ class BookUpdate(BaseModel):
     is_physical: Optional[bool] = None
     category_id: Optional[int] = None
 
-# ==========================================
-# USER SCHEMAS (Autentificare & Înregistrare)
-# ==========================================
 
 class UserCreate(BaseModel):
-    # Ce trimite utilizatorul din frontend când se înregistrează
     username: str
     email: EmailStr
     password: str
 
+
 class UserResponse(BaseModel):
-    # Ce îi returnăm noi (FĂRĂ parolă, din motive evidente de securitate)
     id: int
     username: str
     email: EmailStr
@@ -72,16 +61,15 @@ class UserResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-# ==========================================
-# TOKEN SCHEMAS (Pentru Login)
-# ==========================================
 
 class Token(BaseModel):
     access_token: str
     token_type: str
 
+
 class TokenData(BaseModel):
     email: Optional[str] = None
+
 
 class TransactionCreate(BaseModel):
     """
@@ -89,6 +77,7 @@ class TransactionCreate(BaseModel):
     Nu îi cerem user_id pentru că îl luăm automat din token (Bodyguard).
     """
     transaction_type: str = Field(..., description="'borrow' sau 'purchase'")
+    
 
 class TransactionResponse(BaseModel):
     """Ce returnăm înapoi ca bon/chitanță."""

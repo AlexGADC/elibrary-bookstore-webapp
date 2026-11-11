@@ -7,8 +7,6 @@ from app.core.database import get_db
 from app.core.security import SECRET_KEY, ALGORITHM
 from app.services.repository import user_repo
 
-# Această linie îi spune Swagger-ului unde se află formularul de login
-# pentru butonul verde de "Authorize"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
@@ -24,15 +22,13 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     )
     
     try:
-        # Încercăm să decriptăm biletul de acces (Token-ul)
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email = payload.get("sub")
         if email is None:
             raise credentials_exception
-    except jwt.PyJWTError: # Prinde orice eroare (token modificat, expirat, etc.)
+    except jwt.PyJWTError: 
         raise credentials_exception
         
-    # Căutăm utilizatorul în baza de date
     user = user_repo.get_by_email(db, email=email)
     if user is None:
         raise credentials_exception

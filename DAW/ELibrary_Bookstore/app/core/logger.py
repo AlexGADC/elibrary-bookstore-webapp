@@ -13,6 +13,4 @@ logging.basicConfig(
 
 logger = logging.getLogger("elibrary_logger")
 
-# --- ADAUGĂ LINIA ASTA AICI: ---
-# Îi spunem lui SQLAlchemy să trimită în log doar avertismente sau erori, nu și interogările INFO
 logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
