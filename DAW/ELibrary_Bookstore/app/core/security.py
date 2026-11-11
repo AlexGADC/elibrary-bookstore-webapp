@@ -1,5 +1,5 @@
 import jwt
-import bcrypt  # Importăm bcrypt direct, nu mai folosim passlib
+import bcrypt 
 from datetime import datetime, timedelta, timezone
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -7,24 +7,17 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.database_models import User, Role
 
-# ==========================================
-# CONFIGURĂRI JWT (JSON Web Token)
-# ==========================================
 SECRET_KEY = "my-super-secret-jwt-key-for-elibrary" 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-# ==========================================
-# FUNCȚII DE SECURITATE (Criptare nativă bcrypt)
-# ==========================================
-
 def get_password_hash(password: str) -> str:
+
     """Transformă parola din text clar într-un hash ireversibil."""
-    # Trebuie să convertim string-ul în bytes înainte de hash
+
     pwd_bytes = password.encode('utf-8')
     salt = bcrypt.gensalt()
     hashed_password = bcrypt.hashpw(pwd_bytes, salt)
-    # Returnăm un string curat pe care să-l salvăm în PostgreSQL
     return hashed_password.decode('utf-8')
 
 
@@ -49,11 +42,6 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-# ==========================================
-# GARDIENII (DEPENDENCIES PENTRU RUTE)
-# ==========================================
-
-# Asta îi spune lui FastAPI unde e ruta de login (pentru a genera butonul de Authorize în Swagger)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
@@ -69,16 +57,15 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     )
     
     try:
-        # Decriptăm token-ul cu cheia noastră secretă
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email: str = payload.get("sub")
+        
+        email: str | None = payload.get("sub")
+        
         if email is None:
             raise credentials_exception
     except Exception:
-        # Prindem orice eroare (ex: token expirat)
         raise credentials_exception
         
-    # Căutăm utilizatorul în baza de date
     user = db.query(User).filter(User.email == email).first()
     if user is None:
         raise credentials_exception
@@ -96,8 +83,7 @@ def get_current_admin_user(current_user: User = Depends(get_current_user), db: S
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Nu ai suficiente privilegii pentru această acțiune."
         )
-        
-    # Căutăm rolul în baza de date
+        w
     user_role = db.query(Role).filter(Role.id == current_user.role_id).first()
     
     if not user_role or user_role.name.lower() != "admin":

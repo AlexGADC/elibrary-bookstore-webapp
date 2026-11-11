@@ -17,25 +17,22 @@ router = APIRouter(
 def create_category(
     category_in: CategoryBase, 
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)  # 1. Aducem utilizatorul curent
+    current_user: User = Depends(get_current_user)  
 ):
     """
     Creează o categorie nouă pentru cărți.
     """
-    # 2. Verificăm bool-ul de admin (ajustează numele 'is_admin' dacă la tine în model se numește altfel)
+
     if not current_user.role_id == 1:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access interzis! Doar administratorii pot crea categorii."
         )
 
-    # 3. Creăm categoria folosind repository-ul și o salvăm în variabila 'new_category'
     new_category = category_repo.create(db=db, obj_in=category_in)
 
-    # 4. Acum putem loga fără erori, pentru că 'new_category' și 'current_user' există
     logger.info(f"CATEGORY CREATED: Admin {current_user.email} created a new category named '{new_category.name}'.")
 
-    # 5. Returnăm categoria creată
     return new_category
 
 @router.get("/", response_model=List[CategoryResponse])

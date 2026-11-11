@@ -1,34 +1,9 @@
-2026-11-09 00:06:35 - INFO - LOGIN SUCCESS: User alex@alex.com successfully logged into the system.
-2026-11-09 00:06:37 - INFO - message='Request to Stripe api' method=post url=https://api.stripe.com/v1/checkout/sessions
-2026-11-09 00:06:42 - INFO - message='Stripe API response' path=https://api.stripe.com/v1/checkout/sessions response_code=200
-2026-11-09 00:06:42 - INFO - CHECKOUT INITIATED: User alex@alex.com started the purchase process for book ID: 7 (Transaction ID: 19).
-2026-11-09 00:07:53 - INFO - message='Request to Stripe api' method=get url=https://api.stripe.com/v1/checkout/sessions/cs_test_a1y7PU8XgGrXVUadSVEOzUAX0KTBE4drKs4wYFF4CK6UmYHuuXfhfF539A
-2026-11-09 00:07:53 - INFO - message='Stripe API response' path=https://api.stripe.com/v1/checkout/sessions/cs_test_a1y7PU8XgGrXVUadSVEOzUAX0KTBE4drKs4wYFF4CK6UmYHuuXfhfF539A response_code=200
-2026-11-09 00:07:53 - INFO - PAYMENT SUCCESS: Payment confirmed for user alex@alex.com (Amount: 30.0 RON, Transaction ID: 19).
-2026-11-09 00:08:10 - INFO - message='Request to Stripe api' method=get url=https://api.stripe.com/v1/checkout/sessions/cs_test_a1y7PU8XgGrXVUadSVEOzUAX0KTBE4drKs4wYFF4CK6UmYHuuXfhfF539A
-2026-11-09 00:08:15 - INFO - message='Stripe API response' path=https://api.stripe.com/v1/checkout/sessions/cs_test_a1y7PU8XgGrXVUadSVEOzUAX0KTBE4drKs4wYFF4CK6UmYHuuXfhfF539A response_code=200
-2026-11-09 00:08:15 - INFO - PAYMENT SUCCESS: Payment confirmed for user alex@alex.com (Amount: 30.0 RON, Transaction ID: 19).
-2026-11-09 00:08:42 - INFO - BOOK BORROWED: User alex@alex.com borrowed book ID: 7.
-2026-11-09 00:08:49 - INFO - BOOK RETURNED: User alex@alex.com returned book ID: 7.
-2026-11-09 00:08:59 - INFO - BOOK RETURNED: User alex@alex.com returned book ID: 7.
-2026-11-09 00:09:10 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
-2026-11-09 00:09:17 - INFO - BOOK RETURNED: User alex@alex.com returned book ID: 5.
-2026-11-09 00:09:23 - INFO - BOOK RETURNED: User alex@alex.com returned book ID: 7.
-2026-11-09 00:09:33 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
-2026-11-09 00:09:47 - INFO - BOOK RETURNED: User alex@alex.com returned book ID: 7.
-2026-11-09 00:09:57 - INFO - BOOK BORROWED: User alex@alex.com borrowed book ID: 7.
-2026-11-09 00:10:00 - INFO - BOOK RETURNED: User alex@alex.com returned book ID: 7.
-2026-11-09 00:10:10 - INFO - BOOK ACCESSED: Details for book ID: 7 were viewed.
-2026-11-09 00:10:23 - INFO - BOOK RETURNED: User alex@alex.com returned book ID: 7.
-2026-11-09 00:10:27 - INFO - BOOK ACCESSED: Details for book ID: 7 were viewed.
-2026-11-09 00:10:33 - INFO - BOOK BORROWED: User alex@alex.com borrowed book ID: 7.
-2026-11-09 00:10:38 - INFO - BOOK ACCESSED: Details for book ID: 7 were viewed.
-2026-11-09 00:10:46 - INFO - BOOK RETURNED: User alex@alex.com returned book ID: 7.
-2026-11-09 00:10:53 - INFO - BOOK ACCESSED: Details for book ID: 7 were viewed.
-2026-11-09 00:10:59 - INFO - BOOK RETURNED: User alex@alex.com returned book ID: 7.
-2026-11-09 00:11:32 - INFO - LOGIN SUCCESS: User admin@librarie.ro successfully logged into the system.
-2026-11-09 00:11:37 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
-2026-11-09 00:12:02 - INFO - BOOK DELETED: Admin admin@librarie.ro permanently deleted book 'strinag' (ID: 13).
-2026-11-09 00:12:08 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
-2026-11-09 00:13:01 - INFO - BOOK UPDATED: Admin admin@librarie.ro updated the details for book ID: 3.
-2026-11-09 00:13:09 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-11 12:06:24 - INFO - LOGIN SUCCESS: User alex@alex.com successfully logged into the system.
+2026-11-11 12:06:41 - INFO - message='Request to Stripe api' method=post url=https://api.stripe.com/v1/checkout/sessions
+2026-11-11 12:06:41 - INFO - message='Stripe API response' path=https://api.stripe.com/v1/checkout/sessions response_code=200
+2026-11-11 12:06:41 - INFO - CHECKOUT INITIATED: User alex@alex.com started the purchase process for book ID: 7 (Transaction ID: 23).
+2026-11-11 12:07:28 - INFO - LOGIN SUCCESS: User admin@librarie.ro successfully logged into the system.
+2026-11-11 12:07:49 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-11 12:08:05 - INFO - BOOK CREATED: Admin admin@librarie.ro created a new book titled 'string'.
+2026-11-11 12:08:09 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-11 12:08:17 - INFO - BOOK DELETED: Admin admin@librarie.ro permanently deleted book 'string' (ID: 14).

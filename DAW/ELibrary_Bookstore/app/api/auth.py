@@ -25,7 +25,7 @@ def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
     Înregistrează un utilizator nou.
     Verifică dacă email-ul există deja și criptează parola înainte de salvare.
     """
-    # 1. Verificăm dacă mai există cineva cu acest email
+
     existing_user = user_repo.get_by_email(db=db, email=user_in.email)
     if existing_user:
         raise HTTPException(
@@ -33,13 +33,10 @@ def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
             detail="Email already registered."
         )
     
-    # 2. Hash-uim parola (nu salvăm niciodată parola în clar!)
     hashed_password = get_password_hash(user_in.password)
     
-    # 3. Suprascriem parola trimisă de user cu varianta ei criptată
     user_in.password = hashed_password
     
-    # 4. Creăm utilizatorul în baza de date
     new_user = user_repo.create(db=db, obj_in=user_in)
 
     logger.info(f"USER REGISTERED: New account created for {new_user.email} (Role ID: {new_user.role_id}).") 
@@ -57,10 +54,9 @@ def login_for_access_token(
     Așteaptă un 'username' (în cazul nostru vom folosi email-ul în acest câmp) și 'password'.
     Returnează Token-ul JWT.
     """
-    # Swagger UI trimite datele prin 'form_data.username', dar noi îl folosim pentru EMAIL
+
     user = user_repo.get_by_email(db=db, email=form_data.username)
-    
-    # Verificăm dacă user-ul există și dacă parola introdusă se potrivește cu hash-ul
+
     if not user or not verify_password(form_data.password, str(user.password_hash)):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -68,7 +64,6 @@ def login_for_access_token(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    # Dacă totul e corect, generăm Token-ul valabil 30 de minute
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
