@@ -7,3 +7,56 @@
 2026-11-11 12:08:05 - INFO - BOOK CREATED: Admin admin@librarie.ro created a new book titled 'string'.
 2026-11-11 12:08:09 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
 2026-11-11 12:08:17 - INFO - BOOK DELETED: Admin admin@librarie.ro permanently deleted book 'string' (ID: 14).
+2026-11-11 21:49:00 - INFO - LOGIN SUCCESS: User alex@alex.com successfully logged into the system.
+2026-11-11 21:49:08 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-11 21:49:17 - INFO - BOOK ACCESSED: Details for book ID: 7 were viewed.
+2026-11-11 21:49:26 - INFO - BOOK BORROWED: User alex@alex.com borrowed book ID: 7.
+2026-11-11 21:49:34 - INFO - BOOK RETURNED: User alex@alex.com returned book ID: 7.
+2026-11-11 21:49:37 - INFO - BOOK RETURNED: User alex@alex.com returned book ID: 7.
+2026-11-11 21:50:15 - INFO - LOGIN SUCCESS: User admin@librarie.ro successfully logged into the system.
+2026-11-11 21:51:41 - INFO - BOOK CREATED: Admin admin@librarie.ro created a new book titled 'Crime and Punishment'.
+2026-11-11 21:51:48 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-11 21:53:12 - INFO - BOOK UPDATED: Admin admin@librarie.ro updated the details for book ID: 15.
+2026-11-11 21:53:25 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-11 22:07:15 - INFO - LOGIN SUCCESS: User admin@librarie.ro successfully logged into the system.
+2026-11-11 22:11:10 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-12 17:46:51 - INFO - LOGIN SUCCESS: User alex@alex.com successfully logged into the system.
+2026-11-12 17:56:18 - INFO - HTTP Request: POST https://www.google.com/recaptcha/api/siteverify "HTTP/1.1 200 OK"
+2026-11-12 17:56:18 - INFO - LOGIN SUCCESS: User alex@alex.com successfully logged into the system.
+2026-11-12 18:05:51 - INFO - HTTP Request: POST https://www.google.com/recaptcha/api/siteverify "HTTP/1.1 200 OK"
+2026-11-12 18:05:52 - INFO - LOGIN SUCCESS: User alex@alex.com successfully logged into the system.
+2026-11-12 18:09:09 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-12 18:09:25 - INFO - HTTP Request: POST https://www.google.com/recaptcha/api/siteverify "HTTP/1.1 200 OK"
+2026-11-12 18:09:25 - INFO - LOGIN SUCCESS: User alex@alex.com successfully logged into the system.
+2026-11-12 18:09:25 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-12 18:14:19 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-12 18:14:56 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-12 18:15:01 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-12 18:15:04 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-12 18:15:06 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-12 18:15:06 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-12 18:15:07 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-12 18:15:08 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-12 18:17:08 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-12 18:17:09 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-12 18:20:08 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-12 18:20:23 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-12 18:26:16 - INFO - HTTP Request: POST https://www.google.com/recaptcha/api/siteverify "HTTP/1.1 200 OK"
+2026-11-12 18:26:17 - INFO - LOGIN SUCCESS: User alex@alex.com successfully logged into the system.
+2026-11-12 18:26:17 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-12 18:38:24 - INFO - LOGIN SUCCESS: User admin@librarie.ro successfully logged in (Swagger: True).
+2026-11-12 18:38:43 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-12 18:39:47 - INFO - BOOK DELETED: Admin admin@librarie.ro permanently deleted book 'Praslea' (ID: 5).
+2026-11-12 18:39:54 - INFO - BOOK DELETED: Admin admin@librarie.ro permanently deleted book 'No Longer Human' (ID: 8).
+2026-11-12 18:39:57 - INFO - BOOK DELETED: Admin admin@librarie.ro permanently deleted book 'Alamut' (ID: 3).
+2026-11-12 18:40:00 - INFO - BOOK DELETED: Admin admin@librarie.ro permanently deleted book 'Cook Book' (ID: 7).
+2026-11-12 18:40:04 - INFO - BOOK DELETED: Admin admin@librarie.ro permanently deleted book 'Crime and Punishment' (ID: 15).
+2026-11-12 18:40:08 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-12 18:40:13 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-12 18:56:26 - INFO - CATEGORIES RETRIEVED: The list of book categories was accessed.
+2026-11-12 18:57:12 - INFO - LOGIN SUCCESS: User admin@librarie.ro successfully logged in (Swagger: True).
+2026-11-12 18:57:17 - INFO - CATEGORY DELETED: Admin admin@librarie.ro deleted category 'Psychological' (ID: 1).
+2026-11-12 18:57:20 - INFO - CATEGORY DELETED: Admin admin@librarie.ro deleted category 'stringaf' (ID: 2).
+2026-11-12 18:57:25 - INFO - CATEGORIES RETRIEVED: The list of book categories was accessed.
+2026-11-12 18:57:34 - INFO - CATEGORY CREATED: Admin admin@librarie.ro created a new category named 'string'.
+2026-11-12 18:57:40 - INFO - CATEGORY DELETED: Admin admin@librarie.ro deleted category 'string' (ID: 3).

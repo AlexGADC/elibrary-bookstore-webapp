@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | E-Library & Bookstore</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}?v=1.1">
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+</head>
+<body>
+    <div class="login-container">
+        <h2>Autentificare</h2>
+        <p>Bine ai venit la E-Library! Te rugăm să te loghezi.</p>
+
+        <form id="loginForm">
+            <div class="input-group">
+                <label for="email">Adresă de Email</label>
+                <input type="email" id="email" name="username" required placeholder="admin@library.com">
+            </div>
+
+            <div class="input-group">
+                <label for="password">Parolă</label>
+                <input type="password" id="password" name="password" required placeholder="********">
+            </div>
+
+            <div class="captcha-container">
+                <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>
+            </div>
+
+            <button type="submit" class="login-btn">Intră în cont</button>
+        </form>
+
+        <div id="errorMessage" style="color: red; margin-top: 10px; text-align: center; display: none;"></div>
+    </div>
+    <script src="{{ url_for('static', path='js/script.js') }}?v=1.1"></script>
+</body>
+</html>

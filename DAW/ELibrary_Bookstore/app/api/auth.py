@@ -1,5 +1,7 @@
 from datetime import timedelta
-from fastapi import APIRouter, Depends, HTTPException, status
+import httpx   
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, status, Form, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.core.logger import logger
@@ -45,15 +47,43 @@ def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=Token)
-def login_for_access_token(
+async def login_for_access_token(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(), 
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    captcha: Optional[str] = Form(None) 
 ):
     """
     Endpoint pentru autentificare. 
-    Așteaptă un 'username' (în cazul nostru vom folosi email-ul în acest câmp) și 'password'.
-    Returnează Token-ul JWT.
+    Verifică automat dacă cererea vine din Swagger sau din Frontend.
     """
+    
+    referer = request.headers.get("referer", "")
+    is_swagger = "/docs" in referer or "/redoc" in referer
+
+    if not is_swagger:
+        if not captcha:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Câmpul CAPTCHA este obligatoriu!"
+            )
+            
+        RECAPTCHA_SECRET_KEY = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe" 
+        async with httpx.AsyncClient() as client:
+            google_response = await client.post(
+                "https://www.google.com/recaptcha/api/siteverify",
+                data={
+                    "secret": RECAPTCHA_SECRET_KEY,
+                    "response": captcha
+                }
+            )
+            result = google_response.json()
+            
+            if not result.get("success"):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Validare CAPTCHA eșuată. Te rugăm să încerci din nou."
+                )
 
     user = user_repo.get_by_email(db=db, email=form_data.username)
 
@@ -69,6 +99,6 @@ def login_for_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
     )
 
-    logger.info(f"LOGIN SUCCESS: User {user.email} successfully logged into the system.")
+    logger.info(f"LOGIN SUCCESS: User {user.email} successfully logged in (Swagger: {is_swagger}).")
     
     return {"access_token": access_token, "token_type": "bearer"}

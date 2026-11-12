@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catalog Cărți | E-Library</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}?v=1.2">
+</head>
+<body class="catalog-body">
+
+    <header class="catalog-header">
+        <h1>📚 Catalogul E-Library</h1>
+        <button id="logoutBtn" class="logout-btn">Deconectare</button>
+    </header>
+
+    <div id="catalogMessage" style="text-align: center; color: red; margin: 10px; display: none;"></div>
+
+    <main class="catalog-container" id="booksContainer">
+        <p style="text-align: center; width: 100%; color: gray;">Se încarcă cărțile... ⏳</p>
+    </main>
+
+    <script src="{{ url_for('static', path='js/script.js') }}?v=1.2"></script>
+</body>
+</html>
