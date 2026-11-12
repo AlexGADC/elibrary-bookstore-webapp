@@ -1,3 +1,8 @@
+import stripe
+import os
+import stripe
+import io
+import shutil
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
@@ -7,11 +12,8 @@ from app.models.database_models import User, Book
 from app.core.database import get_db
 from app.schemas.schemas import BookCreate, BookResponse, TransactionResponse, BookUpdate
 from app.services.repository import book_repo, transaction_repo
-import stripe
-import os
-import stripe
+from PIL import Image
 from dotenv import load_dotenv
-import shutil
 from app.core.security import get_current_admin_user
 from app.core.logger import logger
 
@@ -82,6 +84,7 @@ def upload_book_cover(
     """
     Ruta pentru a încărca o copertă (imagine) pentru o carte specifică.
     Permis doar administratorilor. Dimensiune maximă: 12MB.
+    Include protecție anti-steganografie (eliminare metadate EXIF).
     """
 
     if not current_user.role_id == 1:
@@ -112,16 +115,33 @@ def upload_book_cover(
     
     os.makedirs("uploads/covers", exist_ok=True)
     
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    try:
+        file_bytes = file.file.read()
+        
+        img = Image.open(io.BytesIO(file_bytes))
+        
+        if img.mode in ("RGBA", "P"):
+            img = img.convert("RGBA")
+        elif img.mode != "RGB":
+            img = img.convert("RGB")
+            
+        clean_image = img.copy()
+        
+        clean_image.save(file_path)
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Imaginea este coruptă sau conține cod malițios ascuns (Tentativă de Steganografie oprită)."
+        )
         
     book.cover_image_url = f"/{file_path}"
     db.commit()
 
-    logger.info(f"COVER UPLOADED: Admin {current_user.email} uploaded a new cover image for book ID: {book_id}.")
+    logger.info(f"COVER UPLOADED & SECURED: Admin {current_user.email} uploaded a secure cover image for book ID: {book_id}.")
     
     return {
-        "message": "Coperta a fost încărcată cu succes!", 
+        "message": "Coperta a fost încărcată și curățată de metadate cu succes!", 
         "cover_url": book.cover_image_url
     }
 
@@ -180,7 +200,7 @@ def delete_book(
     current_admin: User = Depends(get_current_admin_user)
 ):
     """
-    Șterge o carte din baza de date. 
+    Șterge o carte din baza de date și fișierele fizice asociate (copertă, fișier digital). 
     Acțiune permisă doar Administratorilor.
     """
     # 1. Căutăm cartea
@@ -191,13 +211,26 @@ def delete_book(
             detail="Cartea nu a fost găsită."
         )
     
-    db.delete(book)
+    if book.cover_image_url and os.path.exists(book.cover_image_url):
+        try:
+            os.remove(book.cover_image_url)
+            logger.info(f"FILE DELETED: Cover image '{book.cover_image_url}' removed.")
+        except Exception as e:
+            logger.warning(f"Could not delete cover image on disk: {e}")
+
+    if book.digital_file_url and os.path.exists(book.digital_file_url):
+        try:
+            os.remove(book.digital_file_url)
+            logger.info(f"FILE DELETED: Digital file '{book.digital_file_url}' removed.")
+        except Exception as e:
+            logger.warning(f"Could not delete digital file on disk: {e}")
     
+    db.delete(book)
     db.commit()
 
     logger.info(f"BOOK DELETED: Admin {current_admin.email} permanently deleted book '{book.title}' (ID: {book_id}).")
     
-    return {"message": f"Cartea '{book.title}' a fost ștearsă cu succes!"}
+    return {"message": f"Cartea '{book.title}' și fișierele ei au fost șterse cu succes!"}
 
 @router.post("/{book_id}/upload-file")
 def upload_digital_file(
