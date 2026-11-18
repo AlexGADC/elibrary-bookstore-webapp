@@ -5,8 +5,7 @@ from app.api.books import router as books_router
 from app.api.categories import router as categories_router
 from app.api.auth import router as auth_router
 from fastapi.staticfiles import StaticFiles
-from slowapi.errors import RateLimitExceeded
-from app.core.limiter import limiter
+from app.core.limiter import rate_limit_middleware
 from fastapi.responses import JSONResponse, HTMLResponse
 from contextlib import asynccontextmanager
 from fastapi.staticfiles import StaticFiles
@@ -31,9 +30,11 @@ async def lifespan(app: FastAPI):
 # docs_url=None: dezactivăm pagina /docs implicită, pentru că o servim noi mai jos (cu suport CSRF).
 app = FastAPI(title="ELibrary & Bookstore API", lifespan=lifespan, docs_url=None)
 
-app.state.limiter = limiter
 os.makedirs("uploads/covers", exist_ok=True)
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+# Only the cover images are public. The e-book files in uploads/files are NOT served as static
+# files anymore: they can be downloaded only through GET /books/{id}/download, which checks
+# that the user is logged in and has bought or borrowed the book (Barem 10.05).
+app.mount("/uploads/covers", StaticFiles(directory="uploads/covers"), name="uploads")
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
@@ -86,24 +87,45 @@ async def swagger_ui_with_csrf():
 async def swagger_ui_oauth2_redirect():
     return get_swagger_ui_oauth2_redirect_html()
 
-@app.exception_handler(RateLimitExceeded)
-async def rate_limit_custom_handler(request: Request, exc: RateLimitExceeded):
-    """
-    Prinde eroarea de Rate Limiting (peste 100 cereri/min) și 
-    returnează un mesaj personalizat, rezolvând conflictul de tipizare.
-    """
-    return JSONResponse(
-        status_code=429,
-        content={"detail": "Prea multe cereri! Ai depășit limita. Te rugăm să aștepți un minut."}
-    )
-
 # Protecție CSRF (Barem 9.01). Este înregistrat ÎNAINTE de middleware-ul de headere, astfel încât
 # headerele de securitate să fie adăugate și pe răspunsurile 403 date de protecția CSRF
 # (în FastAPI, ultimul middleware înregistrat este cel mai din exterior).
 app.middleware("http")(csrf_protection_middleware)
 
+# Rate limiting (Barem 10.01). Registered after the CSRF middleware, so it runs BEFORE it:
+# requests rejected by the CSRF check are counted too, and the 429 response still gets
+# the security headers from the middleware below.
+app.middleware("http")(rate_limit_middleware)
+
 # Paginile de documentație au nevoie de un script inline ca să pornească; restul aplicației NU.
 DOCS_PATHS = ("/docs", "/redoc")
+
+# Content-Security-Policy for the application pages (Barem 9.02 + 10.04).
+# No 'unsafe-inline' for scripts, so an injected onerror="..." attribute cannot run.
+# The only external source allowed is Google reCAPTCHA (used on the login page).
+APP_CSP = (
+    "default-src 'self'; "
+    "script-src 'self' https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/; "
+    "frame-src https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/; "
+    "style-src 'self' 'unsafe-inline'; "
+    "img-src 'self'; "
+    "object-src 'none'; "
+    "base-uri 'self'; "
+    "form-action 'self'; "
+    "frame-ancestors 'none'"
+)
+
+# Swagger / ReDoc load their code from a CDN and start with an inline script,
+# so the documentation pages get a more relaxed policy.
+DOCS_CSP = (
+    "default-src 'self'; "
+    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+    "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+    "img-src 'self' data: https://fastapi.tiangolo.com; "
+    "object-src 'none'; "
+    "base-uri 'self'; "
+    "frame-ancestors 'none'"
+)
 
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
@@ -113,15 +135,18 @@ async def add_security_headers(request: Request, call_next):
     """
     response = await call_next(request)
 
-    # Protecție XSS (Barem 9.02): pe paginile aplicației NU permitem scripturi inline
-    # (fără 'unsafe-inline'), deci un atribut injectat de tip onerror="..." nu se mai execută.
-    script_sources = "'self' https://cdn.jsdelivr.net https://www.google.com https://www.gstatic.com"
-    if request.url.path.startswith(DOCS_PATHS):
-        script_sources = "'self' 'unsafe-inline' https://cdn.jsdelivr.net"
+    is_docs_page = request.url.path.startswith(DOCS_PATHS)
 
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-    response.headers["Content-Security-Policy"] = f"default-src 'self'; script-src {script_sources}; frame-src 'self' https://www.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https://fastapi.tiangolo.com; object-src 'none'; base-uri 'self';"
+    response.headers["Content-Security-Policy"] = DOCS_CSP if is_docs_page else APP_CSP
+    # Send only our origin (not the full URL) to other websites.
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    # The site never needs these browser features, so they are switched off for it and for any iframe.
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    # Isolate our pages and files from other websites (other windows / embedding).
+    response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+    response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
     return response

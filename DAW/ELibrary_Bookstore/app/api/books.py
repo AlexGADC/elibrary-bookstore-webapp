@@ -4,11 +4,12 @@ import stripe
 import io
 import shutil
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
-from typing import Optional, List   
+from sqlalchemy import or_, and_
+from typing import Optional, List
 from app.api.deps import get_current_user
-from app.models.database_models import User, Book
+from app.models.database_models import User, Book, Role, LoanPurchase
 from app.core.database import get_db
 from app.schemas.schemas import BookCreate, BookResponse, TransactionResponse, BookUpdate
 from app.services.repository import book_repo, transaction_repo
@@ -292,11 +293,61 @@ def upload_digital_file(
     logger.info(f"FILE UPLOADED: Admin {current_admin.email} uploaded a digital file ({file_ext}) for book ID: {book_id}. Size: {file_size / (1024*1024):.2f} MB.")
 
     return {
-        "message": "Fișierul a fost încărcat cu succes!", 
+        "message": "Fișierul a fost încărcat cu succes!",
         "file_url": book.digital_file_url
     }
 
-@router.get("/", response_model=List[BookResponse]) 
+@router.get("/{book_id}/download")
+def download_digital_file(
+    book_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Descarcă fișierul digital (PDF / EPUB) al unei cărți.
+    Permis doar administratorilor și utilizatorilor care au cumpărat cartea
+    sau au un împrumut activ pentru ea.
+    """
+
+    book = db.query(Book).filter(Book.id == book_id).first()
+    if not book or not book.digital_file_url:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Cartea nu are un fișier digital."
+        )
+
+    # The files in uploads/files are not public, so this is the only way to get one.
+    user_role = db.query(Role).filter(Role.id == current_user.role_id).first()
+    is_admin = user_role is not None and user_role.name.lower() == "admin"
+
+    has_bought_or_borrowed = db.query(LoanPurchase).filter(
+        LoanPurchase.user_id == current_user.id,
+        LoanPurchase.book_id == book_id,
+        or_(
+            and_(LoanPurchase.type == "buy", LoanPurchase.status == "completed"),
+            and_(LoanPurchase.type == "loan", LoanPurchase.status == "active")
+        )
+    ).first() is not None
+
+    if not is_admin and not has_bought_or_borrowed:
+        logger.warning(f"DOWNLOAD DENIED: User {current_user.email} tried to download book ID: {book_id} without owning or borrowing it.")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acces interzis! Trebuie să cumperi sau să împrumuți cartea pentru a o descărca."
+        )
+
+    file_path = book.digital_file_url.lstrip("/")
+    if not os.path.isfile(file_path):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Fișierul digital nu a fost găsit pe server."
+        )
+
+    logger.info(f"FILE DOWNLOADED: User {current_user.email} downloaded the digital file for book ID: {book_id}.")
+
+    return FileResponse(file_path, filename=os.path.basename(file_path))
+
+@router.get("/", response_model=List[BookResponse])
 def get_books(
     skip: int = 0,
     limit: int = 100,

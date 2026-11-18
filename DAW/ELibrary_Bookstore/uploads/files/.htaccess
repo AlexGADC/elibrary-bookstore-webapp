@@ -1,0 +1,3 @@
+# Paid e-books (PDF / EPUB): no direct access from the web.
+# They are delivered only by GET /books/{id}/download, after the access check.
+Require all denied

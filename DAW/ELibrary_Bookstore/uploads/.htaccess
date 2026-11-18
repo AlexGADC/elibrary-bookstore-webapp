@@ -1,0 +1,10 @@
+# Uploaded files must never be listed or executed as code.
+Options -Indexes -ExecCGI
+
+# Refuse everything in this folder by default...
+Require all denied
+
+# ...except cover images.
+<FilesMatch "\.(jpe?g|png|gif|webp|bmp)$">
+    Require all granted
+</FilesMatch>

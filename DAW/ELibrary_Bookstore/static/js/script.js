@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         
                         imgSrc = cleanPath.startsWith('/') ? cleanPath : '/' + cleanPath;
                     } else {
-                        imgSrc = 'data:image/svg+xml;charset=UTF-8,%3Csvg xmlns="http://www.w3.org/2000/svg" width="300" height="400" viewBox="0 0 300 400"%3E%3Crect fill="%23e0e0e0" width="300" height="400"/%3E%3Ctext fill="%23888" x="50%25" y="50%25" text-anchor="middle" font-family="sans-serif" font-size="16" dy=".3em"%3EFara Coperta%3C/text%3E%3C/svg%3E';
+                        imgSrc = '/static/img/no-cover.svg';
                     }
 
                     // Protecție XSS: NU construim HTML din datele cărții (fără innerHTML).

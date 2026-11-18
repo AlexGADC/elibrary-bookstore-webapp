@@ -1,0 +1,25 @@
+# ELibrary & Bookstore - Apache access rules (Barem 10.05)
+#
+# These rules apply only when the site is served through Apache (with AllowOverride enabled).
+# Uvicorn does not read .htaccess files, so the same restrictions are also enforced by the
+# application itself (see app/main.py and GET /books/{id}/download).
+
+# 1. Never show the list of files in a directory
+Options -Indexes
+
+# 2. Block hidden files: .env, .git, .gitignore, .htaccess ...
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# 3. Block source code, configuration, logs and database files
+<FilesMatch "\.(py|pyc|pyo|log|ini|cfg|toml|sql|sqlite|db|bak|sh)$">
+    Require all denied
+</FilesMatch>
+
+<Files "requirements.txt">
+    Require all denied
+</Files>
+
+# 4. Block the internal directories of the application
+RedirectMatch 403 ^/(app|logs|templates|\.venv|\.git|\.github|\.pytest_cache|__pycache__)(/|$)

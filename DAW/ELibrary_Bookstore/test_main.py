@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 from fastapi.testclient import TestClient
 from app.main import app
+from app.core.limiter import reset_rate_limits
 
 client = TestClient(app)
 
@@ -99,3 +100,45 @@ def test_cross_site_post_is_rejected():
     )
     assert response.status_code == 403
     assert "CSRF" in response.json()["detail"]
+
+
+# Test 8: Security headers are sent on every response
+def test_security_headers_are_present():
+    response = client.get("/")
+    for header in [
+        "Content-Security-Policy",
+        "Strict-Transport-Security",
+        "X-Frame-Options",
+        "X-Content-Type-Options",
+        "Referrer-Policy",
+        "Permissions-Policy",
+    ]:
+        assert header in response.headers
+    assert "'unsafe-inline'" not in response.headers["Content-Security-Policy"].split("script-src")[1].split(";")[0]
+
+
+# Test 9: E-book files are not public - no direct link, and the download needs a login
+def test_ebook_files_are_protected():
+    direct_link = client.get("/uploads/files/book_1.pdf")
+    assert direct_link.status_code == 404
+
+    download_without_login = client.get("/books/1/download")
+    assert download_without_login.status_code == 401
+
+
+# Test 10: Rate limiting - after 100 requests in one minute, the next ones are blocked
+def test_rate_limit_blocks_after_100_requests():
+    reset_rate_limits()  # start counting from zero, whatever the tests above did
+    try:
+        # 100 requests spread over a page and an API route: the limit is global, not per route
+        for _ in range(50):
+            assert client.get("/catalog").status_code == 200
+            assert client.get("/books/999999").status_code == 404
+
+        blocked = client.get("/books/")  # request 101
+        assert blocked.status_code == 429
+        assert 1 <= int(blocked.headers["Retry-After"]) <= 61
+        assert "Prea multe cereri" in blocked.json()["detail"]
+        assert "X-Frame-Options" in blocked.headers  # blocked responses keep the security headers
+    finally:
+        reset_rate_limits()  # do not leave the test client blocked
