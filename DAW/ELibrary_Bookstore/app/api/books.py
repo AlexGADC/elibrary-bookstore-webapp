@@ -30,6 +30,7 @@ os.makedirs(FILES_DIR, exist_ok=True)
 MAX_FILE_SIZE_MB = 12
 MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
 
+
 router = APIRouter(
     prefix="/books",
     tags=["Books Catalog"]
@@ -203,7 +204,7 @@ def delete_book(
     Șterge o carte din baza de date și fișierele fizice asociate (copertă, fișier digital). 
     Acțiune permisă doar Administratorilor.
     """
-    # 1. Căutăm cartea
+
     book = db.query(Book).filter(Book.id == book_id).first()
     if not book:
         raise HTTPException(
@@ -232,6 +233,7 @@ def delete_book(
     
     return {"message": f"Cartea '{book.title}' și fișierele ei au fost șterse cu succes!"}
 
+
 @router.post("/{book_id}/upload-file")
 def upload_digital_file(
     book_id: int, 
@@ -241,7 +243,7 @@ def upload_digital_file(
 ):
     """
     Încarcă fișierul digital (ex: PDF) pentru o carte hibridă sau e-book.
-    Permis doar administratorilor.
+    Permis doar administratorilor. Include limită de dimensiune (12 MB).
     """
 
     if not file.filename:
@@ -249,14 +251,24 @@ def upload_digital_file(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Fișierul încărcat nu are un nume valid."
         )
-    
+
     allowed_extensions = [".pdf", ".epub"]
     file_ext = os.path.splitext(file.filename)[1].lower()
-    
+
     if file_ext not in allowed_extensions:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Sunt permise doar fișiere .pdf sau .epub!"
+        )
+
+    file.file.seek(0, os.SEEK_END)
+    file_size = file.file.tell()
+    file.file.seek(0)
+
+    if file_size > MAX_FILE_SIZE_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"Fișierul este prea mare ({file_size / (1024 * 1024):.1f} MB). Dimensiunea maximă permisă este de {MAX_FILE_SIZE_MB} MB."
         )
 
     book = db.query(Book).filter(Book.id == book_id).first()
@@ -268,18 +280,17 @@ def upload_digital_file(
         )
 
     file_path = f"{FILES_DIR}/book_{book_id}{file_ext}"
-    
+
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
     book.digital_file_url = f"/{file_path}"
-    
     book.is_digital = True
-    
+
     db.commit()
 
-    logger.info(f"FILE UPLOADED: Admin {current_admin.email} uploaded a digital file ({file_ext}) for book ID: {book_id}.")
-    
+    logger.info(f"FILE UPLOADED: Admin {current_admin.email} uploaded a digital file ({file_ext}) for book ID: {book_id}. Size: {file_size / (1024*1024):.2f} MB.")
+
     return {
         "message": "Fișierul a fost încărcat cu succes!", 
         "file_url": book.digital_file_url

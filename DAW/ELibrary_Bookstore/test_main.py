@@ -1,35 +1,33 @@
+from types import SimpleNamespace
 from fastapi.testclient import TestClient
 from app.main import app
 
 client = TestClient(app)
 
-# ==========================================
-# TESTUL 1: Verificăm dacă serverul este "treaz"
-# ==========================================
+
+# Test 1: Check if the server is on
 def test_read_root():
     response = client.get("/")
     assert response.status_code == 200
-    assert response.json() == {"message": "Server is running perfectly!"}
+    assert "text/html" in response.headers["content-type"]
+    assert 'id="loginForm"' in response.text
 
-# ==========================================
-# TESTUL 2: Verificăm obținerea listei de cărți
-# ==========================================
+
+# Test 2: Get All Books Test
 def test_get_all_books():
     response = client.get("/books/") 
     assert response.status_code == 200
     assert isinstance(response.json(), list)
 
-# ==========================================
-# TESTUL 3: Tratarea excepțiilor - Carte inexistentă
-# ==========================================
+
+# Test 3: Exceptions - Inexistent book
 def test_get_nonexistent_book():
     response = client.get("/books/999999")
     assert response.status_code == 404
     assert response.json()["detail"] == "Book not found."
 
-# ==========================================
-# TESTUL 4: Securitate - Acces interzis fără Token JWT
-# ==========================================
+
+# Test 4: Access denied without JWT Token
 def test_create_book_without_token():
     book_data = {
         "title": "Carte Hacker",
@@ -42,12 +40,33 @@ def test_create_book_without_token():
     assert response.status_code == 401
     assert response.json()["detail"] == "Not authenticated"
 
-# ==========================================
-# TESTUL 5: Logare eșuată - Date greșite
-# ==========================================
-def test_login_wrong_credentials():
+
+# Test 5: Failed Login - Bad Credentials
+class FakeCaptchaClient:
+    """
+    Înlocuiește httpx.AsyncClient în timpul testului, ca să nu apelăm Google reCAPTCHA
+    prin rețea. Răspunde mereu că verificarea CAPTCHA a reușit.
+    """
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *exc_info):
+        return False
+
+    async def post(self, *args, **kwargs):
+        return SimpleNamespace(json=lambda: {"success": True})
+
+
+def test_login_wrong_credentials(monkeypatch):
+    monkeypatch.setattr("app.api.auth.httpx.AsyncClient", FakeCaptchaClient)
+
     response = client.post(
-        "/auth/login", 
-        data={"username": "hacker@test.com", "password": "parolagresita"}
+        "/auth/login",
+        data={
+            "username": "hacker@test.com",
+            "password": "parolagresita",
+            "captcha": "token-de-test"
+        }
     )
-    assert response.status_code in [401, 403, 404] 
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Incorrect email or password"
