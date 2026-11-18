@@ -1,1 +1,4 @@
 .env
+DAW/ELibrary_Bookstore/database/seed.sql
+DAW/ELibrary_Bookstore/uploads/files/*.pdf
+DAW/ELibrary_Bookstore/uploads/files/*.epub

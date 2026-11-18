@@ -64,3 +64,6 @@
 2026-11-18 12:29:26 - INFO - HTTP Request: POST https://www.google.com/recaptcha/api/siteverify "HTTP/1.1 200 OK"
 2026-11-18 12:29:26 - INFO - LOGIN SUCCESS: User admin@librarie.ro successfully logged in (Swagger: False).
 2026-11-18 12:29:26 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-18 23:53:39 - INFO - HTTP Request: POST https://www.google.com/recaptcha/api/siteverify "HTTP/1.1 200 OK"
+2026-11-18 23:53:39 - INFO - LOGIN SUCCESS: User admin@librarie.ro successfully logged in (Swagger: False).
+2026-11-18 23:53:39 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
