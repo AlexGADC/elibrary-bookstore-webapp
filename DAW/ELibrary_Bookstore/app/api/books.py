@@ -3,7 +3,7 @@ import os
 import stripe
 import io
 import shutil
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Request
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_
@@ -30,6 +30,22 @@ os.makedirs(FILES_DIR, exist_ok=True)
 
 MAX_FILE_SIZE_MB = 12
 MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
+
+
+def get_site_url(request: Request) -> str:
+    """
+    The public address of the site, used for the links Stripe sends the buyer back to.
+    If APP_BASE_URL is set in .env it is used as it is (recommended when the app is hosted).
+    Otherwise the address is taken from the request itself, so it works on localhost,
+    through a tunnel or behind a proxy without any configuration.
+    """
+    configured_url = os.getenv("APP_BASE_URL")
+    if configured_url:
+        return configured_url.rstrip("/")
+
+    scheme = request.headers.get("x-forwarded-proto", request.url.scheme)
+    host = request.headers.get("host", request.url.netloc)
+    return f"{scheme}://{host}"
 
 
 router = APIRouter(
@@ -151,10 +167,10 @@ def upload_book_cover(
 def create_new_book(
     book_in: BookCreate, 
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)  
+    current_user: User = Depends(get_current_admin_user)
 ):
     """
-    Creează o carte nouă (DOAR pentru utilizatorii logați).
+    Creează o carte nouă. Acțiune permisă doar Administratorilor.
     """
     existing_book = book_repo.get_by_title(db=db, title=book_in.title)
     if existing_book:
@@ -407,6 +423,7 @@ def get_single_book(book_id: int, db: Session = Depends(get_db)):
 @router.post("/{book_id}/buy", response_model=TransactionResponse, status_code=status.HTTP_201_CREATED)
 def buy_book_endpoint(
     book_id: int,
+    request: Request,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
@@ -422,6 +439,7 @@ def buy_book_endpoint(
     transaction = transaction_repo.buy_book(db=db, user_id=current_user.id, book_id=book_id)
 
     price_in_bani = int(book.price * 100)
+    site_url = get_site_url(request)
 
     checkout_session = stripe.checkout.Session.create(
         line_items=[{
@@ -437,9 +455,9 @@ def buy_book_endpoint(
         }],
         mode='payment',
         
-        success_url=f"http://localhost:8000/books/payment-success?session_id={{CHECKOUT_SESSION_ID}}&transaction_id={transaction.id}",
+        success_url=f"{site_url}/books/payment-success?session_id={{CHECKOUT_SESSION_ID}}&transaction_id={transaction.id}",
         
-        cancel_url="http://localhost:8000/docs"
+        cancel_url=f"{site_url}/docs"
     )
 
     logger.info(f"CHECKOUT INITIATED: User {current_user.email} started the purchase process for book ID: {book_id} (Transaction ID: {transaction.id}).")

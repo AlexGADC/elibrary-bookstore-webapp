@@ -2,6 +2,8 @@ from types import SimpleNamespace
 from fastapi.testclient import TestClient
 from app.main import app
 from app.core.limiter import reset_rate_limits
+from app.core import security
+from app.api.books import get_site_url
 
 client = TestClient(app)
 
@@ -142,3 +144,32 @@ def test_rate_limit_blocks_after_100_requests():
         assert "X-Frame-Options" in blocked.headers  # blocked responses keep the security headers
     finally:
         reset_rate_limits()  # do not leave the test client blocked
+
+# Test 11: Authorization - a logged-in user who is not an admin cannot add books
+def test_normal_user_cannot_create_book():
+    normal_user = SimpleNamespace(id=999, email="user@test.com", role_id=2)
+    app.dependency_overrides[security.get_current_user] = lambda: normal_user
+    try:
+        response = client.post(
+            "/books/",
+            json={"title": "Carte Test", "author_name": "Autor", "price": 10.0, "category_id": 1}
+        )
+        assert response.status_code == 403
+    finally:
+        app.dependency_overrides.clear()
+
+
+# Test 12: Stripe return links follow the address the site is opened at (not a fixed localhost)
+def test_stripe_return_address_follows_the_site_address(monkeypatch):
+    def fake_request(host, forwarded_proto=None):
+        headers = {"host": host}
+        if forwarded_proto:
+            headers["x-forwarded-proto"] = forwarded_proto
+        return SimpleNamespace(headers=headers, url=SimpleNamespace(scheme="http", netloc=host))
+
+    monkeypatch.delenv("APP_BASE_URL", raising=False)
+    assert get_site_url(fake_request("localhost:8000")) == "http://localhost:8000"
+    assert get_site_url(fake_request("demo.trycloudflare.com", "https")) == "https://demo.trycloudflare.com"
+
+    monkeypatch.setenv("APP_BASE_URL", "https://elibrary.example.com/")
+    assert get_site_url(fake_request("localhost:8000")) == "https://elibrary.example.com"
