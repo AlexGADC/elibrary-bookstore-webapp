@@ -4,6 +4,11 @@ from app.main import app
 
 client = TestClient(app)
 
+# CSRF: the first GET makes the server set the "csrf_token" cookie.
+# We send the same value back in the X-CSRF-Token header, like the real frontend does.
+client.get("/")
+client.headers["X-CSRF-Token"] = client.cookies["csrf_token"]
+
 
 # Test 1: Check if the server is on
 def test_read_root():
@@ -70,3 +75,27 @@ def test_login_wrong_credentials(monkeypatch):
     )
     assert response.status_code == 401
     assert response.json()["detail"] == "Incorrect email or password"
+
+
+# Test 6: CSRF - a POST without the CSRF token is rejected
+def test_post_without_csrf_token_is_rejected():
+    client_without_token = TestClient(app)
+    client_without_token.get("/")  # has the cookie, but never sends the header
+
+    response = client_without_token.post(
+        "/auth/login",
+        data={"username": "hacker@test.com", "password": "parolagresita"}
+    )
+    assert response.status_code == 403
+    assert "CSRF" in response.json()["detail"]
+
+
+# Test 7: CSRF - a POST coming from another website is rejected, even with a valid token
+def test_cross_site_post_is_rejected():
+    response = client.post(
+        "/auth/login",
+        data={"username": "hacker@test.com", "password": "parolagresita"},
+        headers={"Origin": "https://evil.example"}
+    )
+    assert response.status_code == 403
+    assert "CSRF" in response.json()["detail"]

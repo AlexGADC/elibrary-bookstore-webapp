@@ -60,3 +60,7 @@
 2026-11-12 18:57:25 - INFO - CATEGORIES RETRIEVED: The list of book categories was accessed.
 2026-11-12 18:57:34 - INFO - CATEGORY CREATED: Admin admin@librarie.ro created a new category named 'string'.
 2026-11-12 18:57:40 - INFO - CATEGORY DELETED: Admin admin@librarie.ro deleted category 'string' (ID: 3).
+2026-11-18 12:29:16 - INFO - HTTP Request: POST https://www.google.com/recaptcha/api/siteverify "HTTP/1.1 200 OK"
+2026-11-18 12:29:26 - INFO - HTTP Request: POST https://www.google.com/recaptcha/api/siteverify "HTTP/1.1 200 OK"
+2026-11-18 12:29:26 - INFO - LOGIN SUCCESS: User admin@librarie.ro successfully logged in (Swagger: False).
+2026-11-18 12:29:26 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).

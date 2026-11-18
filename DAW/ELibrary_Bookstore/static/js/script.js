@@ -1,3 +1,24 @@
+// --- Protecție CSRF ---
+// Serverul pune token-ul într-un cookie numit "csrf_token". Îl citim de acolo și îl trimitem
+// înapoi în header-ul "X-CSRF-Token" la orice cerere care modifică date.
+function getCsrfToken() {
+    const match = document.cookie.match(/(?:^|; )csrf_token=([^;]*)/);
+    return match ? decodeURIComponent(match[1]) : '';
+}
+
+// Folosește apiFetch() în loc de fetch() pentru cererile către server:
+// adaugă automat header-ul CSRF la POST / PUT / PATCH / DELETE.
+function apiFetch(url, options = {}) {
+    const method = (options.method || 'GET').toUpperCase();
+    const headers = { ...(options.headers || {}) };
+
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+        headers['X-CSRF-Token'] = getCsrfToken();
+    }
+
+    return fetch(url, { ...options, headers });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm');
     const errorDiv = document.getElementById('errorMessage');
@@ -23,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('captcha', captchaResponse); 
 
             try {
-                const response = await fetch('/auth/login', {
+                const response = await apiFetch('/auth/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -75,10 +96,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const books = await response.json();
                 
-                booksContainer.innerHTML = '';
+                booksContainer.replaceChildren();
 
                 if (books.length === 0) {
-                    booksContainer.innerHTML = '<p style="text-align: center; width: 100%;">Nu există cărți în baza de date momentan.</p>';
+                    const emptyMessage = document.createElement('p');
+                    emptyMessage.style.textAlign = 'center';
+                    emptyMessage.style.width = '100%';
+                    emptyMessage.textContent = 'Nu există cărți în baza de date momentan.';
+                    booksContainer.appendChild(emptyMessage);
                     return;
                 }
 
@@ -103,15 +128,36 @@ document.addEventListener('DOMContentLoaded', () => {
                         imgSrc = 'data:image/svg+xml;charset=UTF-8,%3Csvg xmlns="http://www.w3.org/2000/svg" width="300" height="400" viewBox="0 0 300 400"%3E%3Crect fill="%23e0e0e0" width="300" height="400"/%3E%3Ctext fill="%23888" x="50%25" y="50%25" text-anchor="middle" font-family="sans-serif" font-size="16" dy=".3em"%3EFara Coperta%3C/text%3E%3C/svg%3E';
                     }
 
-                    card.innerHTML = `
-                        <div class="book-cover-container">
-                            <img src="${imgSrc}" alt="Copertă ${book.title}" class="book-cover">
-                        </div>
-                        <h3 class="book-title">${book.title}</h3>
-                        <p class="book-author">de ${authorName}</p>
-                        <p class="book-price">${book.price} RON</p>
-                        <p style="font-size: 12px; color: gray;">Stoc: ${book.stock}</p>
-                    `;
+                    // Protecție XSS: NU construim HTML din datele cărții (fără innerHTML).
+                    // Creăm elementele cu createElement și punem datele cu textContent / proprietăți,
+                    // astfel încât browserul le tratează mereu ca text simplu, niciodată ca și cod.
+                    const coverContainer = document.createElement('div');
+                    coverContainer.className = 'book-cover-container';
+
+                    const cover = document.createElement('img');
+                    cover.className = 'book-cover';
+                    cover.src = imgSrc;
+                    cover.alt = `Copertă ${book.title}`;
+                    coverContainer.appendChild(cover);
+
+                    const title = document.createElement('h3');
+                    title.className = 'book-title';
+                    title.textContent = book.title;
+
+                    const author = document.createElement('p');
+                    author.className = 'book-author';
+                    author.textContent = `de ${authorName}`;
+
+                    const price = document.createElement('p');
+                    price.className = 'book-price';
+                    price.textContent = `${book.price} RON`;
+
+                    const stock = document.createElement('p');
+                    stock.style.fontSize = '12px';
+                    stock.style.color = 'gray';
+                    stock.textContent = `Stoc: ${book.stock}`;
+
+                    card.append(coverContainer, title, author, price, stock);
                     booksContainer.appendChild(card);
                 });
 
