@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.logger import logger
 from app.core.database import get_db
 from app.schemas.schemas import UserCreate, UserResponse, Token
-from app.services.repository import user_repo
+from app.services.repository import user_repo, role_repo
 from app.core.security import (
     get_password_hash, 
     verify_password, 
@@ -39,7 +39,9 @@ def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
     
     user_in.password = hashed_password
     
-    new_user = user_repo.create(db=db, obj_in=user_in)
+    user_role = role_repo.get_or_create(db=db, name="user")
+
+    new_user = user_repo.create(db=db, obj_in=user_in, role_id=user_role.id)
 
     logger.info(f"USER REGISTERED: New account created for {new_user.email} (Role ID: {new_user.role_id}).") 
 

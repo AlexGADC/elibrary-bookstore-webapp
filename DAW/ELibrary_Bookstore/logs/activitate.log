@@ -67,3 +67,13 @@
 2026-11-18 23:53:39 - INFO - HTTP Request: POST https://www.google.com/recaptcha/api/siteverify "HTTP/1.1 200 OK"
 2026-11-18 23:53:39 - INFO - LOGIN SUCCESS: User admin@librarie.ro successfully logged in (Swagger: False).
 2026-11-18 23:53:39 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-19 00:34:07 - INFO - LOGIN SUCCESS: User alex@alex.com successfully logged in (Swagger: True).
+2026-11-19 00:34:20 - INFO - message='Request to Stripe api' method=post url=https://api.stripe.com/v1/checkout/sessions
+2026-11-19 00:34:20 - INFO - message='Stripe API response' path=https://api.stripe.com/v1/checkout/sessions response_code=200
+2026-11-19 00:34:20 - INFO - CHECKOUT INITIATED: User alex@alex.com started the purchase process for book ID: 1 (Transaction ID: 1).
+2026-11-19 00:34:55 - INFO - message='Request to Stripe api' method=get url=https://api.stripe.com/v1/checkout/sessions/cs_test_a0LidHibB75Erqlgwo3m94MDu1LLfIATv2eSQl42D8Dk8yqlefJJQvcTAW
+2026-11-19 00:34:55 - INFO - message='Stripe API response' path=https://api.stripe.com/v1/checkout/sessions/cs_test_a0LidHibB75Erqlgwo3m94MDu1LLfIATv2eSQl42D8Dk8yqlefJJQvcTAW response_code=200
+2026-11-19 00:34:55 - INFO - PAYMENT SUCCESS: Payment confirmed for user alex@alex.com (Amount: 39.9 RON, Transaction ID: 1).
+2026-11-19 00:35:19 - INFO - message='Request to Stripe api' method=get url=https://api.stripe.com/v1/checkout/sessions/cs_test_a0LidHibB75Erqlgwo3m94MDu1LLfIATv2eSQl42D8Dk8yqlefJJQvcTAW
+2026-11-19 00:35:19 - INFO - message='Stripe API response' path=https://api.stripe.com/v1/checkout/sessions/cs_test_a0LidHibB75Erqlgwo3m94MDu1LLfIATv2eSQl42D8Dk8yqlefJJQvcTAW response_code=200
+2026-11-19 00:35:19 - INFO - PAYMENT SUCCESS: Payment confirmed for user alex@alex.com (Amount: 39.9 RON, Transaction ID: 1).

@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import TypeVar, Generic, Type, Optional, List
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from app.models.database_models import Category, LoanPurchase
+from app.models.database_models import Category, LoanPurchase, Role
 from app.schemas.schemas import CategoryBase
 from fastapi import HTTPException, status
 from app.schemas.schemas import TransactionCreate
@@ -86,11 +86,12 @@ class UserRepository(BaseRepository[User, UserCreate]):
         return db.query(User).filter(User.email == email).first()
 
 
-    def create(self, db: Session, obj_in: UserCreate) -> User:
+    def create(self, db: Session, obj_in: UserCreate, role_id: Optional[int] = None) -> User:
         obj_in_data = obj_in.model_dump()
         
         password_value = obj_in_data.pop("password")
         obj_in_data["password_hash"] = password_value
+        obj_in_data["role_id"] = role_id
         
         db_obj = self.model(**obj_in_data)
         db.add(db_obj)
@@ -98,6 +99,37 @@ class UserRepository(BaseRepository[User, UserCreate]):
         db.refresh(db_obj)
         return db_obj
     
+
+DEFAULT_ROLES = ("admin", "user")
+
+
+class RoleRepository(BaseRepository[Role, BaseModel]):
+    """
+    Clasa specifică pentru manipularea Rolurilor.
+    """
+    def __init__(self):
+        super().__init__(Role)
+
+    def get_by_name(self, db: Session, name: str) -> Optional[Role]:
+        return db.query(Role).filter(Role.name == name).first()
+
+    def get_or_create(self, db: Session, name: str) -> Role:
+        role = self.get_by_name(db, name)
+        if role is None:
+            role = Role(name=name)
+            db.add(role)
+            db.commit()
+            db.refresh(role)
+        return role
+
+    def ensure_default_roles(self, db: Session) -> None:
+        """
+        Creates the "admin" and "user" roles if they are missing (for example on a new, empty database).
+        "admin" comes first so it gets ID 1 there, because some routes check role_id == 1.
+        """
+        for name in DEFAULT_ROLES:
+            self.get_or_create(db, name)
+
 
 class CategoryRepository(BaseRepository[Category, CategoryBase]):
     """
@@ -207,3 +239,4 @@ transaction_repo = TransactionRepository()
 category_repo = CategoryRepository()
 book_repo = BookRepository()
 user_repo = UserRepository()
+role_repo = RoleRepository()

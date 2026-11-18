@@ -1,6 +1,7 @@
 import os
 from fastapi import FastAPI, Request
-from app.core.database import engine, Base
+from app.core.database import engine, Base, SessionLocal
+from app.services.repository import role_repo
 from app.api.books import router as books_router
 from app.api.categories import router as categories_router
 from app.api.auth import router as auth_router
@@ -14,6 +15,9 @@ from app.core.csrf import csrf_protection_middleware, CSRF_COOKIE_NAME, CSRF_HEA
 
 
 Base.metadata.create_all(bind=engine)
+
+with SessionLocal() as db:
+    role_repo.ensure_default_roles(db)
 
 app = FastAPI(title="ELibrary & Bookstore API")
 

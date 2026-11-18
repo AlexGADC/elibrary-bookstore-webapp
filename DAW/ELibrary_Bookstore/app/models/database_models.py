@@ -1,3 +1,4 @@
+from typing import Optional
 from sqlalchemy import Column, Integer, String, Boolean, Numeric, ForeignKey, DateTime, func
 from sqlalchemy.orm import relationship
 from app.core.database import Base
@@ -19,7 +20,7 @@ class User(Base):
     username = Column(String(100), nullable=False)
     email: Mapped[str] = mapped_column(String(150), unique=True, index=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
-    role_id: Mapped[int] = mapped_column(Integer, ForeignKey("roles.id", ondelete="SET NULL"))
+    role_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("roles.id", ondelete="SET NULL"))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     role = relationship("Role", back_populates="users")

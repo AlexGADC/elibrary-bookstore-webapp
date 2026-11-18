@@ -1,9 +1,12 @@
+import uuid
 from types import SimpleNamespace
 from fastapi.testclient import TestClient
 from app.main import app
 from app.core.limiter import reset_rate_limits
 from app.core import security
 from app.api.books import get_site_url
+from app.core.database import SessionLocal
+from app.models.database_models import Role, User
 
 client = TestClient(app)
 
@@ -173,3 +176,23 @@ def test_stripe_return_address_follows_the_site_address(monkeypatch):
 
     monkeypatch.setenv("APP_BASE_URL", "https://elibrary.example.com/")
     assert get_site_url(fake_request("localhost:8000")) == "https://elibrary.example.com"
+
+
+# Test 13: Registration - a new account gets the "user" role, and the default roles exist
+def test_register_assigns_user_role():
+    email = f"test-{uuid.uuid4().hex[:12]}@example.com"
+    try:
+        response = client.post(
+            "/auth/register",
+            json={"username": "Test User", "email": email, "password": uuid.uuid4().hex}
+        )
+        assert response.status_code == 201
+
+        with SessionLocal() as db:
+            roles = {role.name: role.id for role in db.query(Role).all()}
+        assert {"admin", "user"} <= set(roles)
+        assert response.json()["role_id"] == roles["user"]
+    finally:
+        with SessionLocal() as db:  # remove the test account again
+            db.query(User).filter(User.email == email).delete()
+            db.commit()
