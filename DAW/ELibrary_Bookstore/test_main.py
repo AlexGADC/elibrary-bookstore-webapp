@@ -1,12 +1,14 @@
 import uuid
 from types import SimpleNamespace
+from fastapi import Request
 from fastapi.testclient import TestClient
 from app.main import app
 from app.core.limiter import reset_rate_limits
 from app.core import security
 from app.api.books import get_site_url
 from app.core.database import SessionLocal
-from app.models.database_models import Role, User
+from app.models.database_models import User
+from app.services.repository import role_repo
 
 client = TestClient(app)
 
@@ -164,11 +166,11 @@ def test_normal_user_cannot_create_book():
 
 # Test 12: Stripe return links follow the address the site is opened at (not a fixed localhost)
 def test_stripe_return_address_follows_the_site_address(monkeypatch):
-    def fake_request(host, forwarded_proto=None):
-        headers = {"host": host}
+    def fake_request(host: str, forwarded_proto: str = "") -> Request:
+        headers = [(b"host", host.encode())]
         if forwarded_proto:
-            headers["x-forwarded-proto"] = forwarded_proto
-        return SimpleNamespace(headers=headers, url=SimpleNamespace(scheme="http", netloc=host))
+            headers.append((b"x-forwarded-proto", forwarded_proto.encode()))
+        return Request({"type": "http", "method": "GET", "path": "/", "scheme": "http", "headers": headers})
 
     monkeypatch.delenv("APP_BASE_URL", raising=False)
     assert get_site_url(fake_request("localhost:8000")) == "http://localhost:8000"
@@ -189,9 +191,10 @@ def test_register_assigns_user_role():
         assert response.status_code == 201
 
         with SessionLocal() as db:
-            roles = {role.name: role.id for role in db.query(Role).all()}
-        assert {"admin", "user"} <= set(roles)
-        assert response.json()["role_id"] == roles["user"]
+            admin_role = role_repo.get_by_name(db, "admin")
+            user_role = role_repo.get_by_name(db, "user")
+        assert admin_role is not None and user_role is not None
+        assert response.json()["role_id"] == user_role.id
     finally:
         with SessionLocal() as db:  # remove the test account again
             db.query(User).filter(User.email == email).delete()

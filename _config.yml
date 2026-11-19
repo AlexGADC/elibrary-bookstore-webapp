@@ -1,0 +1,8 @@
+# Settings for the GitHub Pages site (the page is built from README.md)
+title: ELibrary & Bookstore
+description: An online library and bookstore built with FastAPI and PostgreSQL
+theme: jekyll-theme-cayman
+
+# Publish only the README page, not the source code folders
+exclude:
+  - DAW
