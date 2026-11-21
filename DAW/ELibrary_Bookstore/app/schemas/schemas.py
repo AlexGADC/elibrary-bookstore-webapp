@@ -52,6 +52,11 @@ class UserCreate(BaseModel):
     password: str
 
 
+class UserRegister(UserCreate):
+    """What the register form sends: the account data plus the CAPTCHA answer."""
+    captcha: Optional[str] = None
+
+
 class UserResponse(BaseModel):
     id: int
     username: str

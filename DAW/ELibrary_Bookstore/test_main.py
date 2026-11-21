@@ -4,7 +4,7 @@ from fastapi import Request
 from fastapi.testclient import TestClient
 from app.main import app
 from app.core.limiter import reset_rate_limits
-from app.core import security
+from app.core import security, captcha
 from app.api.books import get_site_url
 from app.core.database import SessionLocal
 from app.models.database_models import User
@@ -71,7 +71,7 @@ class FakeCaptchaClient:
 
 
 def test_login_wrong_credentials(monkeypatch):
-    monkeypatch.setattr("app.api.auth.httpx.AsyncClient", FakeCaptchaClient)
+    monkeypatch.setattr("app.core.captcha.httpx.AsyncClient", FakeCaptchaClient)
 
     response = client.post(
         "/auth/login",
@@ -181,12 +181,19 @@ def test_stripe_return_address_follows_the_site_address(monkeypatch):
 
 
 # Test 13: Registration - a new account gets the "user" role, and the default roles exist
-def test_register_assigns_user_role():
+def test_register_assigns_user_role(monkeypatch):
+    monkeypatch.setattr("app.core.captcha.httpx.AsyncClient", FakeCaptchaClient)
+
     email = f"test-{uuid.uuid4().hex[:12]}@example.com"
     try:
         response = client.post(
             "/auth/register",
-            json={"username": "Test User", "email": email, "password": uuid.uuid4().hex}
+            json={
+                "username": "Test User",
+                "email": email,
+                "password": uuid.uuid4().hex,
+                "captcha": "token-de-test"
+            }
         )
         assert response.status_code == 201
 
@@ -199,3 +206,34 @@ def test_register_assigns_user_role():
         with SessionLocal() as db:  # remove the test account again
             db.query(User).filter(User.email == email).delete()
             db.commit()
+
+
+# Test 14: CAPTCHA - registration without a CAPTCHA answer is rejected
+def test_register_without_captcha_is_rejected(monkeypatch):
+    monkeypatch.setattr(captcha, "ALLOW_DOCS_LOGIN", False)
+
+    response = client.post(
+        "/auth/register",
+        json={"username": "Bot", "email": f"bot-{uuid.uuid4().hex[:12]}@example.com", "password": uuid.uuid4().hex}
+    )
+    assert response.status_code == 400
+    assert "CAPTCHA" in response.json()["detail"]
+
+
+# Test 15: CAPTCHA - pretending to be the /docs page skips it only when ALLOW_DOCS_LOGIN is on
+def test_docs_shortcut_needs_the_setting(monkeypatch):
+    wrong_login = {"username": "hacker@test.com", "password": "parolagresita"}
+    from_docs_page = {"Referer": "http://testserver/docs"}
+
+    monkeypatch.setattr(captcha, "ALLOW_DOCS_LOGIN", False)
+    response = client.post("/auth/login", data=wrong_login, headers=from_docs_page)
+    assert response.status_code == 400
+    assert "CAPTCHA" in response.json()["detail"]
+
+    monkeypatch.setattr(captcha, "ALLOW_DOCS_LOGIN", True)
+    response = client.post("/auth/login", data=wrong_login, headers=from_docs_page)
+    assert response.status_code == 401  # CAPTCHA skipped, so the password was checked
+
+    # A request that only mentions /docs from another website is not accepted as the docs page
+    response = client.post("/auth/login", data=wrong_login, headers={"Referer": "http://evil.example/docs"})
+    assert response.status_code == 400
