@@ -83,3 +83,45 @@
 2026-11-21 15:32:08 - INFO - HTTP Request: POST https://www.google.com/recaptcha/api/siteverify "HTTP/1.1 200 OK"
 2026-11-21 15:32:08 - INFO - LOGIN SUCCESS: User alex@alex.com successfully logged in (Swagger: False).
 2026-11-21 15:32:08 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-21 15:57:12 - INFO - CATEGORIES RETRIEVED: The list of book categories was accessed.
+2026-11-21 15:57:12 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-21 15:57:25 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'O', Category: None, Digital: None).
+2026-11-21 15:57:26 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-21 15:57:27 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'A', Category: None, Digital: None).
+2026-11-21 15:57:28 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'Ato', Category: None, Digital: None).
+2026-11-21 15:57:31 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'Ato', Category: 1, Digital: None).
+2026-11-21 15:57:33 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: 1, Digital: None).
+2026-11-21 15:57:35 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: 2, Digital: None).
+2026-11-21 15:57:38 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: 3, Digital: None).
+2026-11-21 15:57:41 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: 3, Digital: True).
+2026-11-21 15:57:43 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: True).
+2026-11-21 15:57:53 - INFO - CATEGORIES RETRIEVED: The list of book categories was accessed.
+2026-11-21 15:57:53 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-21 15:58:24 - INFO - CATEGORIES RETRIEVED: The list of book categories was accessed.
+2026-11-21 15:58:24 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-21 15:59:27 - INFO - CATEGORIES RETRIEVED: The list of book categories was accessed.
+2026-11-21 15:59:27 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-21 15:59:43 - INFO - HTTP Request: POST https://www.google.com/recaptcha/api/siteverify "HTTP/1.1 200 OK"
+2026-11-21 15:59:43 - INFO - LOGIN SUCCESS: User alex@alex.com successfully logged in (Swagger: False).
+2026-11-21 15:59:43 - INFO - CATEGORIES RETRIEVED: The list of book categories was accessed.
+2026-11-21 15:59:43 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-21 15:59:46 - INFO - CATEGORIES RETRIEVED: The list of book categories was accessed.
+2026-11-21 15:59:46 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-21 16:00:17 - INFO - HTTP Request: POST https://www.google.com/recaptcha/api/siteverify "HTTP/1.1 200 OK"
+2026-11-21 16:00:17 - INFO - USER REGISTERED: New account created for you@example.com (Role ID: 2, Swagger: False).
+2026-11-21 16:00:31 - INFO - HTTP Request: POST https://www.google.com/recaptcha/api/siteverify "HTTP/1.1 200 OK"
+2026-11-21 16:00:31 - INFO - LOGIN SUCCESS: User you@example.com successfully logged in (Swagger: False).
+2026-11-21 16:00:31 - INFO - CATEGORIES RETRIEVED: The list of book categories was accessed.
+2026-11-21 16:00:31 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-21 16:02:06 - INFO - CATEGORIES RETRIEVED: The list of book categories was accessed.
+2026-11-21 16:02:06 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-21 16:03:29 - INFO - CATEGORIES RETRIEVED: The list of book categories was accessed.
+2026-11-21 16:03:29 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-21 16:11:06 - INFO - HTTP Request: POST https://www.google.com/recaptcha/api/siteverify "HTTP/1.1 200 OK"
+2026-11-21 16:11:06 - INFO - LOGIN SUCCESS: User alex@alex.com successfully logged in (Swagger: False).
+2026-11-21 16:11:06 - INFO - CATEGORIES RETRIEVED: The list of book categories was accessed.
+2026-11-21 16:11:06 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-21 16:11:12 - INFO - CATEGORIES RETRIEVED: The list of book categories was accessed.
+2026-11-21 16:11:12 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-21 16:11:32 - INFO - CATEGORIES RETRIEVED: The list of book categories was accessed.
+2026-11-21 16:11:32 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).

@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}E-Library &amp; Bookstore | Borrow, buy and read books online{% endblock %}
+{% block description %}E-Library &amp; Bookstore is an online library and bookshop: borrow books for 14 days, buy them with a card and download the e-books you own.{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="container hero-intro">
+        <h1>Your library and bookstore in one place</h1>
+        <p>Borrow a book for two weeks, buy the ones you love, and read the digital editions wherever you are.</p>
+    </div>
+
+    {% if featured_books %}
+    <div class="carousel" id="featuredCarousel" role="region" aria-roledescription="carousel" aria-label="Featured books">
+        <div class="carousel-viewport">
+            <ul class="carousel-track" id="carouselTrack">
+                {% for book in featured_books %}
+                <li class="carousel-slide" aria-roledescription="slide" aria-label="Book {{ loop.index }} of {{ featured_books|length }}">
+                    <img class="slide-backdrop" src="{{ book.cover_url }}" alt="" aria-hidden="true"
+                         width="300" height="450" {% if not loop.first %}loading="lazy"{% endif %}>
+
+                    <div class="slide-content">
+                        <img class="slide-cover" src="{{ book.cover_url }}" alt="Cover of {{ book.title }}"
+                             width="300" height="450" {% if not loop.first %}loading="lazy"{% endif %}>
+
+                        <div class="slide-text">
+                            <p class="slide-label">Featured book</p>
+                            <h2 class="slide-title">{{ book.title }}</h2>
+                            <p class="slide-author">by {{ book.author }}</p>
+                            {% if book.description %}
+                            <p class="slide-description">{{ book.description }}</p>
+                            {% endif %}
+                            <p class="slide-price">{{ book.price }} RON</p>
+                            <a class="btn btn-light" href="/catalog?search={{ book.title|urlencode }}"
+                               aria-label="See {{ book.title }} in the catalog">See it in the catalog</a>
+                        </div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <button class="carousel-arrow carousel-prev" id="carouselPrev" type="button" aria-label="Previous book">&#8249;</button>
+        <button class="carousel-arrow carousel-next" id="carouselNext" type="button" aria-label="Next book">&#8250;</button>
+
+        <div class="carousel-controls">
+            <!-- The round buttons are created by home.js, one per slide -->
+            <div class="carousel-dots" id="carouselDots"></div>
+            <button class="carousel-toggle" id="carouselToggle" type="button" aria-label="Pause the slideshow">Pause</button>
+        </div>
+    </div>
+    {% else %}
+    <p class="container hero-empty">The catalog is empty for now. Books will appear here as soon as they are added.</p>
+    {% endif %}
+</section>
+
+<section class="container page-section">
+    <h2 class="section-title">How it works</h2>
+
+    <div class="feature-grid">
+        <article class="feature-card">
+            <span class="feature-number" aria-hidden="true">1</span>
+            <h3>Borrow for 14 days</h3>
+            <p>Pick any book that is in stock and keep it for two weeks. Return it with one click when you are done.</p>
+        </article>
+
+        <article class="feature-card">
+            <span class="feature-number" aria-hidden="true">2</span>
+            <h3>Buy with a card</h3>
+            <p>Want to keep it? Pay securely online and the book is yours.</p>
+        </article>
+
+        <article class="feature-card">
+            <span class="feature-number" aria-hidden="true">3</span>
+            <h3>Read the e-book</h3>
+            <p>Books marked "E-book" come with a digital edition you can download after you buy or borrow them.</p>
+        </article>
+    </div>
+</section>
+
+{% if categories %}
+<section class="container page-section section-tight">
+    <h2 class="section-title">Browse by category</h2>
+
+    <ul class="category-list">
+        {% for category in categories %}
+        <li><a class="category-chip" href="/catalog?category_id={{ category.id }}">{{ category.name }}</a></li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
+
+{% if more_books %}
+<section class="container page-section section-tight">
+    <div class="page-heading">
+        <h2 class="section-title">More from the catalog</h2>
+        <a href="/catalog">See all books</a>
+    </div>
+
+    <div class="book-grid">
+        {% for book in more_books %}
+        <article class="book-card">
+            <div class="book-cover-container">
+                <img class="book-cover" src="{{ book.cover_url }}" alt="Cover of {{ book.title }}" width="300" height="450" loading="lazy">
+            </div>
+            <div class="book-info">
+                <h3 class="book-title">{{ book.title }}</h3>
+                <p class="book-author">by {{ book.author }}</p>
+                <div class="book-badges">
+                    {% if book.in_stock %}
+                    <span class="badge badge-in-stock">In stock</span>
+                    {% else %}
+                    <span class="badge badge-out-of-stock">Out of stock</span>
+                    {% endif %}
+                    {% if book.is_digital %}
+                    <span class="badge badge-digital">E-book</span>
+                    {% endif %}
+                </div>
+                <div class="book-meta">
+                    <p class="book-price">{{ book.price }} RON</p>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<section class="cta-band" data-auth="guest">
+    <div class="container cta-inner">
+        <div>
+            <h2>New here?</h2>
+            <p>Create a free account to start borrowing and buying books.</p>
+        </div>
+        <a class="btn btn-primary" href="/register">Create account</a>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+    <script src="/static/js/home.js?v={{ asset_version }}"></script>
+{% endblock %}

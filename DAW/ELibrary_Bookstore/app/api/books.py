@@ -71,7 +71,7 @@ def payment_success_endpoint(
             transaction = transaction_repo.complete_transaction(db=db, transaction_id=transaction_id)
             
             if not transaction:
-                raise HTTPException(status_code=404, detail="Tranzacția nu a fost găsită.")
+                raise HTTPException(status_code=404, detail="Transaction not found.")
 
             user = db.query(User).filter(User.id == transaction.user_id).first()
             user_email = user.email if user else f"ID necunoscut ({transaction.user_id})"
@@ -81,15 +81,15 @@ def payment_success_endpoint(
             logger.info(f"PAYMENT SUCCESS: Payment confirmed for user {user_email} (Amount: {amount_paid} RON, Transaction ID: {transaction_id}).")
             
             return {
-                "message": "Plata a fost realizată cu succes! Cartea este acum a ta.", 
+                "message": "Payment successful! The book is now yours.", 
                 "transaction_id": transaction_id, 
                 "status": transaction.status
             }
         else:
-            return {"message": f"Plata încă nu a fost finalizată. Status curent: {checkout_session.payment_status}"}
+            return {"message": f"The payment has not been completed yet. Current status: {checkout_session.payment_status}"}
             
     except stripe.StripeError as e:
-        raise HTTPException(status_code=400, detail=f"Eroare de la Stripe: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Stripe error: {str(e)}")
 
 
 @router.post("/{book_id}/upload-cover")
@@ -108,23 +108,23 @@ def upload_book_cover(
     if not current_user.role_id == 1:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Acces interzis! Doar administratorii pot încărca coperți."
+            detail="Access denied! Only administrators can upload covers."
         )
 
     book = db.query(Book).filter(Book.id == book_id).first()
     if not book:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cartea nu a fost găsită.")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found.")
         
     if not file.content_type or not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Fișierul trebuie să fie o imagine (.jpg, .png, etc.)")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The file must be an image (.jpg, .png, etc.)")
     
     if not file.filename:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Fișierului îi lipsește numele.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The file has no name.")
     
     if file.size and file.size > MAX_FILE_SIZE_BYTES:
         raise HTTPException(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail=f"Fișierul este prea mare! Limita este de {MAX_FILE_SIZE_MB} MB."
+            detail=f"The file is too large! The limit is {MAX_FILE_SIZE_MB} MB."
         )
     
     file_extension = os.path.splitext(file.filename)[1].lower()
@@ -150,7 +150,7 @@ def upload_book_cover(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Imaginea este coruptă sau conține cod malițios ascuns (Tentativă de Steganografie oprită)."
+            detail="The image is corrupted or contains hidden malicious content (steganography attempt blocked)."
         )
         
     book.cover_image_url = f"/{file_path}"
@@ -159,7 +159,7 @@ def upload_book_cover(
     logger.info(f"COVER UPLOADED & SECURED: Admin {current_user.email} uploaded a secure cover image for book ID: {book_id}.")
     
     return {
-        "message": "Coperta a fost încărcată și curățată de metadate cu succes!", 
+        "message": "The cover was uploaded and cleaned of metadata successfully!", 
         "cover_url": book.cover_image_url
     }
 
@@ -197,7 +197,7 @@ def update_book(
 
     book = db.query(Book).filter(Book.id == book_id).first()
     if not book:
-        raise HTTPException(status_code=404, detail="Cartea nu a fost găsită.")
+        raise HTTPException(status_code=404, detail="Book not found.")
     
     update_data = book_update.dict(exclude_unset=True)
     
@@ -209,7 +209,7 @@ def update_book(
 
     logger.info(f"BOOK UPDATED: Admin {current_admin.email} updated the details for book ID: {book_id}.")
     
-    return {"message": "Cartea a fost actualizată cu succes!", "book": book}
+    return {"message": "The book was updated successfully!", "book": book}
 
 @router.delete("/{book_id}", status_code=status.HTTP_200_OK)
 def delete_book(
@@ -226,7 +226,7 @@ def delete_book(
     if not book:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Cartea nu a fost găsită."
+            detail="Book not found."
         )
     
     if book.cover_image_url and os.path.exists(book.cover_image_url):
@@ -248,7 +248,7 @@ def delete_book(
 
     logger.info(f"BOOK DELETED: Admin {current_admin.email} permanently deleted book '{book.title}' (ID: {book_id}).")
     
-    return {"message": f"Cartea '{book.title}' și fișierele ei au fost șterse cu succes!"}
+    return {"message": f"The book '{book.title}' and its files were deleted successfully!"}
 
 
 @router.post("/{book_id}/upload-file")
@@ -266,7 +266,7 @@ def upload_digital_file(
     if not file.filename:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Fișierul încărcat nu are un nume valid."
+            detail="The uploaded file has no valid name."
         )
 
     allowed_extensions = [".pdf", ".epub"]
@@ -275,7 +275,7 @@ def upload_digital_file(
     if file_ext not in allowed_extensions:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Sunt permise doar fișiere .pdf sau .epub!"
+            detail="Only .pdf or .epub files are allowed!"
         )
 
     file.file.seek(0, os.SEEK_END)
@@ -285,7 +285,7 @@ def upload_digital_file(
     if file_size > MAX_FILE_SIZE_BYTES:
         raise HTTPException(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail=f"Fișierul este prea mare ({file_size / (1024 * 1024):.1f} MB). Dimensiunea maximă permisă este de {MAX_FILE_SIZE_MB} MB."
+            detail=f"The file is too large ({file_size / (1024 * 1024):.1f} MB). The maximum allowed size is {MAX_FILE_SIZE_MB} MB."
         )
 
     book = db.query(Book).filter(Book.id == book_id).first()
@@ -293,7 +293,7 @@ def upload_digital_file(
     if not book:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Cartea nu a fost găsită."
+            detail="Book not found."
         )
 
     file_path = f"{FILES_DIR}/book_{book_id}{file_ext}"
@@ -309,7 +309,7 @@ def upload_digital_file(
     logger.info(f"FILE UPLOADED: Admin {current_admin.email} uploaded a digital file ({file_ext}) for book ID: {book_id}. Size: {file_size / (1024*1024):.2f} MB.")
 
     return {
-        "message": "Fișierul a fost încărcat cu succes!",
+        "message": "The file was uploaded successfully!",
         "file_url": book.digital_file_url
     }
 
@@ -329,7 +329,7 @@ def download_digital_file(
     if not book or not book.digital_file_url:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Cartea nu are un fișier digital."
+            detail="This book has no digital file."
         )
 
     # The files in uploads/files are not public, so this is the only way to get one.
@@ -349,14 +349,14 @@ def download_digital_file(
         logger.warning(f"DOWNLOAD DENIED: User {current_user.email} tried to download book ID: {book_id} without owning or borrowing it.")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Acces interzis! Trebuie să cumperi sau să împrumuți cartea pentru a o descărca."
+            detail="Access denied! You need to buy or borrow this book to download it."
         )
 
     file_path = book.digital_file_url.lstrip("/")
     if not os.path.isfile(file_path):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Fișierul digital nu a fost găsit pe server."
+            detail="The digital file was not found on the server."
         )
 
     logger.info(f"FILE DOWNLOADED: User {current_user.email} downloaded the digital file for book ID: {book_id}.")
@@ -434,7 +434,7 @@ def buy_book_endpoint(
     
     book = db.query(Book).filter(Book.id == book_id).first()
     if not book:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cartea nu a fost găsită.")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found.")
         
     transaction = transaction_repo.buy_book(db=db, user_id=current_user.id, book_id=book_id)
 
@@ -447,7 +447,7 @@ def buy_book_endpoint(
                 'currency': 'ron',
                 'product_data': {
                     'name': book.title,
-                    'description': f"Autor: {book.author_name}"
+                    'description': f"Author: {book.author_name}"
                 },
                 'unit_amount': price_in_bani,
             },

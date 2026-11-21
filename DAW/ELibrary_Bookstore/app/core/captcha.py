@@ -55,7 +55,7 @@ async def verify_captcha(captcha_response: Optional[str]) -> None:
     if not captcha_response:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Câmpul CAPTCHA este obligatoriu!"
+            detail="Please complete the CAPTCHA."
         )
 
     async with httpx.AsyncClient() as client:
@@ -67,5 +67,5 @@ async def verify_captcha(captcha_response: Optional[str]) -> None:
     if not google_response.json().get("success"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Validare CAPTCHA eșuată. Te rugăm să încerci din nou."
+            detail="CAPTCHA verification failed. Please try again."
         )

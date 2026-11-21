@@ -1,24 +1,45 @@
-<!DOCTYPE html>
-<html lang="ro">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catalog Cărți | E-Library</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}?v=1.2">
-</head>
-<body class="catalog-body">
+{% extends "base.html" %}
 
-    <header class="catalog-header">
-        <h1>📚 Catalogul E-Library</h1>
-        <button id="logoutBtn" class="logout-btn">Deconectare</button>
-    </header>
+{% block title %}Book catalog | E-Library &amp; Bookstore{% endblock %}
+{% block description %}Browse the E-Library catalog: fiction, thrillers and personal development books to borrow, buy or read as e-books.{% endblock %}
 
-    <div id="catalogMessage" style="text-align: center; color: red; margin: 10px; display: none;"></div>
+{% block content %}
+<section class="container page-section">
+    <div class="page-heading">
+        <h1>Book catalog</h1>
+        <p id="resultCount" class="muted" aria-live="polite"></p>
+    </div>
 
-    <main class="catalog-container" id="booksContainer">
-        <p style="text-align: center; width: 100%; color: gray;">Se încarcă cărțile... ⏳</p>
-    </main>
+    <form class="catalog-filters" id="catalogFilters" role="search">
+        <div class="form-group">
+            <label for="searchInput">Search</label>
+            <input type="search" id="searchInput" name="search" placeholder="Title or author">
+        </div>
 
-    <script src="{{ url_for('static', path='js/script.js') }}?v=1.4"></script>
-</body>
-</html>
+        <div class="form-group">
+            <label for="categorySelect">Category</label>
+            <select id="categorySelect" name="category_id">
+                <option value="">All categories</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="formatSelect">Format</label>
+            <select id="formatSelect" name="format">
+                <option value="">Any format</option>
+                <option value="digital">E-book available</option>
+            </select>
+        </div>
+    </form>
+
+    <div class="alert alert-error" id="catalogMessage" role="alert" hidden></div>
+
+    <div class="book-grid" id="booksContainer" aria-live="polite">
+        <p class="grid-note">Loading books...</p>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+    <script src="/static/js/catalog.js?v={{ asset_version }}"></script>
+{% endblock %}

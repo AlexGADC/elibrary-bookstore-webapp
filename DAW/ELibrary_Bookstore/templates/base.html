@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}E-Library &amp; Bookstore{% endblock %}</title>
+    <meta name="description" content="{% block description %}E-Library &amp; Bookstore: browse the catalog, borrow books, buy them online and download the e-books you own.{% endblock %}">
+    <link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/css/style.css?v={{ asset_version }}">
+    <link rel="stylesheet" href="/static/css/responsive.css?v={{ asset_version }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header">
+        <div class="container header-inner">
+            <a class="brand" href="/">
+                <img src="/static/img/favicon.svg" alt="" width="28" height="28">
+                <span>E-Library</span>
+            </a>
+
+            <button class="nav-toggle" id="navToggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="siteNav">
+                <span></span><span></span><span></span>
+            </button>
+
+            <nav class="site-nav" id="siteNav" aria-label="Main menu">
+                <a class="nav-link" href="/">Home</a>
+                <a class="nav-link" href="/catalog">Catalog</a>
+
+                <!-- Shown to visitors who are not logged in -->
+                <a class="nav-link" href="/login" data-auth="guest">Log in</a>
+                <a class="btn btn-light btn-small" href="/register" data-auth="guest">Create account</a>
+
+                <!-- Shown after logging in (common.js switches these on) -->
+                <button class="btn btn-light btn-small" id="logoutBtn" type="button" data-auth="user" hidden>Log out</button>
+            </nav>
+        </div>
+    </header>
+
+    <main id="main" class="site-main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <p>E-Library &amp; Bookstore &middot; University web development project</p>
+            <nav class="footer-nav" aria-label="Footer menu">
+                <a href="/">Home</a>
+                <a href="/catalog">Catalog</a>
+                <a href="/login">Log in</a>
+                <a href="/register">Create account</a>
+            </nav>
+        </div>
+    </footer>
+
+    <script src="/static/js/common.js?v={{ asset_version }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

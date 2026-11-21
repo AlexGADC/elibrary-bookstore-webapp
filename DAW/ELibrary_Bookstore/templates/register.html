@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Create account | E-Library &amp; Bookstore{% endblock %}
+{% block description %}Create a free E-Library account to borrow books for 14 days, buy them online and download e-books.{% endblock %}
+
+{% block head %}
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+    <div class="auth-card">
+        <h1>Create account</h1>
+        <p class="auth-intro">It's free. You can borrow, buy and download books right away.</p>
+
+        <div class="alert" id="formMessage" role="alert" hidden></div>
+
+        <form id="registerForm" novalidate>
+            <div class="form-group">
+                <label for="username">Name</label>
+                <input type="text" id="username" name="username" autocomplete="name" required minlength="2" maxlength="100">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email address</label>
+                <input type="email" id="email" name="email" autocomplete="email" required placeholder="you@example.com">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" autocomplete="new-password" required minlength="8" maxlength="64" aria-describedby="passwordHint">
+                <p class="form-hint" id="passwordHint">At least 8 characters.</p>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">Repeat password</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" autocomplete="new-password" required>
+            </div>
+
+            <div class="captcha-container">
+                <div class="g-recaptcha" data-sitekey="{{ recaptcha_site_key }}"></div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" id="submitBtn">Create account</button>
+        </form>
+
+        <p class="auth-switch">Already have an account? <a href="/login">Log in</a></p>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+    <script src="/static/js/auth.js?v={{ asset_version }}"></script>
+{% endblock %}

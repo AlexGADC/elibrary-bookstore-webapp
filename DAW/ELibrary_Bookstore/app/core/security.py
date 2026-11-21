@@ -52,7 +52,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Token invalid sau expirat. Te rugăm să te loghezi din nou.",
+        detail="Invalid or expired token. Please log in again.",
         headers={"WWW-Authenticate": "Bearer"},
     )
     
@@ -81,7 +81,7 @@ def get_current_admin_user(current_user: User = Depends(get_current_user), db: S
     if not current_user.role_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Nu ai suficiente privilegii pentru această acțiune."
+            detail="You do not have enough privileges for this action."
         )
         w
     user_role = db.query(Role).filter(Role.id == current_user.role_id).first()
@@ -89,7 +89,7 @@ def get_current_admin_user(current_user: User = Depends(get_current_user), db: S
     if not user_role or user_role.name.lower() != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Atenție! Această acțiune este rezervată exclusiv administratorilor."
+            detail="This action is reserved for administrators."
         )
         
     return current_user

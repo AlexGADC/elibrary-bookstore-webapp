@@ -18,12 +18,24 @@ client.get("/")
 client.headers["X-CSRF-Token"] = client.cookies["csrf_token"]
 
 
-# Test 1: Check if the server is on
+# Test 1: Check if the server is on and the pages are served
 def test_read_root():
-    response = client.get("/")
+    response = client.get("/")  # the home page
     assert response.status_code == 200
     assert "text/html" in response.headers["content-type"]
-    assert 'id="loginForm"' in response.text
+    assert 'class="hero"' in response.text
+
+    catalog_page = client.get("/catalog")
+    assert catalog_page.status_code == 200
+    assert 'id="booksContainer"' in catalog_page.text
+
+    login_page = client.get("/login")
+    assert login_page.status_code == 200
+    assert 'id="loginForm"' in login_page.text
+
+    register_page = client.get("/register")
+    assert register_page.status_code == 200
+    assert 'id="registerForm"' in register_page.text
 
 
 # Test 2: Get All Books Test
@@ -145,7 +157,7 @@ def test_rate_limit_blocks_after_100_requests():
         blocked = client.get("/books/")  # request 101
         assert blocked.status_code == 429
         assert 1 <= int(blocked.headers["Retry-After"]) <= 61
-        assert "Prea multe cereri" in blocked.json()["detail"]
+        assert "Too many requests" in blocked.json()["detail"]
         assert "X-Frame-Options" in blocked.headers  # blocked responses keep the security headers
     finally:
         reset_rate_limits()  # do not leave the test client blocked

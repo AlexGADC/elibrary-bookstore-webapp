@@ -28,7 +28,7 @@ def create_category(
     if not current_user.role_id == 1:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access interzis! Doar administratorii pot crea categorii."
+            detail="Access denied! Only administrators can create categories."
         )
 
     new_category = category_repo.create(db=db, obj_in=category_in)
@@ -61,7 +61,7 @@ def delete_category(
         logger.warning(f"UNAUTHORIZED DELETE ATTEMPT: User {current_user.email} tried to delete a category.")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Acces interzis! Doar administratorii pot șterge categorii."
+            detail="Access denied! Only administrators can delete categories."
 
         )
     category = db.query(Category).filter(Category.id == category_id).first()
@@ -69,14 +69,14 @@ def delete_category(
     if not category:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Categoria nu a fost găsită."
+            detail="Category not found."
         )
         
     books_in_category = db.query(Book).filter(Book.category_id == category_id).first()
     if books_in_category:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Nu poți șterge categoria '{category.name}' deoarece conține cărți. Șterge sau mută cărțile mai întâi."
+            detail=f"You cannot delete the category '{category.name}' because it contains books. Delete or move the books first."
         )
 
     category_name = category.name
@@ -89,9 +89,9 @@ def delete_category(
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Eroare de integritate: Categoria nu poate fi ștearsă (posibil legată de alte înregistrări)."
+            detail="Integrity error: the category cannot be deleted (it may be linked to other records)."
         )
 
     logger.info(f"CATEGORY DELETED: Admin {current_user.email} deleted category '{category_name}' (ID: {category_id}).")
     
-    return {"message": f"Categoria '{category_name}' a fost ștearsă cu succes!"}
+    return {"message": f"The category '{category_name}' was deleted successfully!"}

@@ -61,7 +61,7 @@ def is_same_origin(request: Request) -> bool:
 def _reject(request: Request, reason: str) -> JSONResponse:
     client_ip = request.client.host if request.client else "necunoscut"
     logger.warning(f"CSRF BLOCKED: {request.method} {request.url.path} from {client_ip} ({reason}).")
-    return JSONResponse(status_code=403, content={"detail": f"Cerere respinsă (CSRF): {reason}"})
+    return JSONResponse(status_code=403, content={"detail": f"Request rejected (CSRF): {reason}"})
 
 
 async def csrf_protection_middleware(request: Request, call_next):
@@ -70,7 +70,7 @@ async def csrf_protection_middleware(request: Request, call_next):
 
     if request.method not in SAFE_METHODS:
         if not is_same_origin(request):
-            return _reject(request, "cererea provine de pe alt site.")
+            return _reject(request, "the request comes from another website.")
 
         header_token = request.headers.get(CSRF_HEADER_NAME)
         tokens_match = (
@@ -79,7 +79,7 @@ async def csrf_protection_middleware(request: Request, call_next):
             and hmac.compare_digest(header_token.encode("utf-8"), cookie_token.encode("utf-8"))
         )
         if not tokens_match:
-            return _reject(request, "token CSRF lipsă sau invalid.")
+            return _reject(request, "missing or invalid CSRF token.")
 
     response = await call_next(request)
 

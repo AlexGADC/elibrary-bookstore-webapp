@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Log in | E-Library &amp; Bookstore{% endblock %}
+{% block description %}Log in to your E-Library account to borrow books, buy them online and download your e-books.{% endblock %}
+
+{% block head %}
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+    <div class="auth-card">
+        <h1>Log in</h1>
+        <p class="auth-intro">Welcome back! Log in to borrow and buy books.</p>
+
+        <div class="alert" id="formMessage" role="alert" hidden></div>
+
+        <form id="loginForm" novalidate>
+            <div class="form-group">
+                <label for="email">Email address</label>
+                <input type="email" id="email" name="username" autocomplete="email" required placeholder="you@example.com">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" autocomplete="current-password" required>
+            </div>
+
+            <div class="captcha-container">
+                <div class="g-recaptcha" data-sitekey="{{ recaptcha_site_key }}"></div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" id="submitBtn">Log in</button>
+        </form>
+
+        <p class="auth-switch">Don't have an account? <a href="/register">Create one</a></p>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+    <script src="/static/js/auth.js?v={{ asset_version }}"></script>
+{% endblock %}

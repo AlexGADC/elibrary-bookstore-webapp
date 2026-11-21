@@ -54,6 +54,8 @@ class UserCreate(BaseModel):
 
 class UserRegister(UserCreate):
     """What the register form sends: the account data plus the CAPTCHA answer."""
+    username: str = Field(min_length=2, max_length=100)
+    password: str = Field(min_length=8, max_length=64)
     captcha: Optional[str] = None
 
 

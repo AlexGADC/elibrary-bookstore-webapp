@@ -1,0 +1,267 @@
+/* =====================================================================
+   E-Library & Bookstore - responsive rules
+   style.css holds the desktop layout; this file adapts it to smaller screens.
+
+     Tablet:  768px to 1024px wide
+     Phone:   up to 767px wide
+     Small phone: up to 480px wide
+   ===================================================================== */
+
+/* ---------- Tablet ---------- */
+@media (max-width: 1024px) {
+    /* Only left and right: writing "padding: 0 20px" here would also wipe out
+       the top and bottom spacing that .page-section adds to the same element. */
+    .container {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    h1 {
+        font-size: 1.75rem;
+    }
+
+    .book-grid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 20px;
+    }
+
+    .catalog-filters {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    /* The search box takes the whole first row */
+    .catalog-filters .form-group:first-child {
+        grid-column: 1 / -1;
+    }
+
+    .hero-intro h1 {
+        font-size: 2rem;
+    }
+
+    .carousel {
+        padding: 0 20px;
+    }
+
+    .slide-content {
+        grid-template-columns: 180px 1fr;
+        gap: 28px;
+        min-height: 360px;
+        padding: 32px 68px;
+    }
+
+    .slide-cover {
+        width: 180px;
+        height: 270px;
+    }
+
+    .slide-title {
+        font-size: 1.6rem;
+    }
+
+    .carousel-prev {
+        left: 30px;
+    }
+
+    .carousel-next {
+        right: 30px;
+    }
+
+    .feature-grid {
+        gap: 16px;
+    }
+
+    .feature-card {
+        padding: 18px;
+    }
+}
+
+/* ---------- Phone ---------- */
+@media (max-width: 767px) {
+    /* The menu collapses behind the three-line button */
+    .nav-toggle {
+        display: block;
+    }
+
+    .site-nav {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+        padding: 12px 20px 18px;
+        background-color: var(--navy);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .site-nav.is-open {
+        display: flex;
+    }
+
+    .site-nav .nav-link,
+    .site-nav .btn {
+        width: 100%;
+        padding: 12px 14px;
+        text-align: left;
+        justify-content: flex-start;
+    }
+
+    .page-section {
+        padding-top: 28px;
+        padding-bottom: 40px;
+    }
+
+    .section-tight {
+        padding-top: 0;
+    }
+
+    .page-heading {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .catalog-filters {
+        grid-template-columns: 1fr;
+        padding: 14px;
+    }
+
+    /* As many columns as fit: two on a phone, three or four on a wider screen */
+    .book-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 14px;
+    }
+
+    .book-info {
+        padding: 12px;
+    }
+
+    .book-meta {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .auth-page {
+        padding: 28px 12px 40px;
+    }
+
+    .auth-card {
+        padding: 26px 20px;
+    }
+
+    .footer-inner {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .hero {
+        padding: 28px 0 24px;
+    }
+
+    .hero-intro h1 {
+        font-size: 1.7rem;
+    }
+
+    .hero-intro p {
+        font-size: 1rem;
+    }
+
+    /* On a phone the cover goes above the text and everything is centred */
+    .slide-content {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        gap: 18px;
+        min-height: 0;
+        padding: 26px 20px 30px;
+        text-align: center;
+    }
+
+    .slide-cover {
+        width: 140px;
+        height: 210px;
+    }
+
+    .slide-title {
+        font-size: 1.4rem;
+    }
+
+    .slide-description {
+        font-size: 0.95rem;
+    }
+
+    /* The arrows move up next to the cover, so they do not sit on top of the text */
+    .carousel-arrow {
+        top: 131px;
+        width: 40px;
+        height: 40px;
+    }
+
+    .carousel-prev {
+        left: 28px;
+    }
+
+    .carousel-next {
+        right: 28px;
+    }
+
+    .feature-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cta-inner {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+/* ---------- Small phone ---------- */
+@media (max-width: 480px) {
+    .container {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    .brand {
+        font-size: 1.1rem;
+    }
+
+    .book-title {
+        font-size: 0.98rem;
+    }
+
+    .auth-card {
+        padding: 22px 14px;
+    }
+
+    /* The reCAPTCHA box has a fixed width of 304px; shrink it so it fits narrow screens */
+    .captcha-container {
+        min-height: 68px;
+    }
+
+    .g-recaptcha {
+        transform: scale(0.87);
+        transform-origin: center top;
+    }
+
+    .carousel {
+        padding: 0 14px;
+    }
+
+    .carousel-prev {
+        left: 22px;
+    }
+
+    .carousel-next {
+        right: 22px;
+    }
+
+    .cta-inner .btn {
+        width: 100%;
+    }
+}

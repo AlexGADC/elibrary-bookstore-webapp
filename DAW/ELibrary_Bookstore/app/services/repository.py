@@ -149,9 +149,9 @@ class TransactionRepository(BaseRepository[LoanPurchase, TransactionCreate]):
         book = db.query(Book).filter(Book.id == book_id).first()
         
         if not book:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cartea nu a fost găsită.")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found.")
         if book.stock <= 0:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cartea nu mai este în stoc pentru cumpărare!")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="This book is out of stock.")
             
         book.stock -= 1
         
@@ -172,9 +172,9 @@ class TransactionRepository(BaseRepository[LoanPurchase, TransactionCreate]):
         book = db.query(Book).filter(Book.id == book_id).first()
         
         if not book:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cartea nu a fost găsită.")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found.")
         if book.stock <= 0:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Toate exemplarele sunt deja împrumutate!")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="All copies are currently borrowed.")
             
         book.stock -= 1
         
@@ -207,7 +207,7 @@ class TransactionRepository(BaseRepository[LoanPurchase, TransactionCreate]):
         if not transaction:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, 
-                detail="Nu ai un împrumut activ pentru această carte."
+                detail="You do not have an active loan for this book."
             )
             
         book = db.query(Book).filter(Book.id == book_id).first()

@@ -48,7 +48,7 @@ async def rate_limit_middleware(request: Request, call_next):
 
         return JSONResponse(
             status_code=429,
-            content={"detail": "Prea multe cereri! Ai depășit limita. Te rugăm să aștepți un minut."},
+            content={"detail": "Too many requests! You have exceeded the limit. Please wait a minute."},
             headers={"Retry-After": str(retry_after)}
         )
 

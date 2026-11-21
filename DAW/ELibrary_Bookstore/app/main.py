@@ -1,6 +1,8 @@
 import os
-from fastapi import FastAPI, Request
-from app.core.database import engine, Base, SessionLocal
+from fastapi import FastAPI, Request, Depends
+from sqlalchemy.orm import Session
+from app.core.database import engine, Base, SessionLocal, get_db
+from app.models.database_models import Book, Category
 from app.services.repository import role_repo
 from app.api.books import router as books_router
 from app.api.categories import router as categories_router
@@ -8,7 +10,7 @@ from app.api.auth import router as auth_router
 from fastapi.staticfiles import StaticFiles
 from app.core.limiter import rate_limit_middleware
 from app.core.captcha import RECAPTCHA_SITE_KEY
-from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.responses import JSONResponse, HTMLResponse, PlainTextResponse
 from contextlib import asynccontextmanager
 from fastapi.templating import Jinja2Templates
 from fastapi.openapi.docs import get_swagger_ui_html, get_swagger_ui_oauth2_redirect_html
@@ -43,25 +45,85 @@ app.include_router(books_router)
 app.include_router(categories_router)
 app.include_router(auth_router)
 
-@app.get("/", response_class=HTMLResponse)
-async def read_root(request: Request):
+# Changing this number makes browsers download the CSS and JS files again instead of using old copies.
+ASSET_VERSION = "2.3"
+templates.env.globals["asset_version"] = ASSET_VERSION
+
+NO_COVER_IMAGE = "/static/img/no-cover.svg"
+FEATURED_BOOKS_COUNT = 5   # slides in the home page carousel
+MORE_BOOKS_COUNT = 5       # books shown under it
+
+def book_for_page(book: Book) -> dict:
+    """The fields of a book that the home page template shows."""
+    return {
+        "id": book.id,
+        "title": book.title,
+        "author": book.author_name,
+        "description": book.description,
+        "price": f"{book.price:.2f}",
+        "cover_url": book.cover_image_url or NO_COVER_IMAGE,
+        "in_stock": book.stock > 0,
+        "is_digital": bool(book.is_digital),
+    }
+
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+def read_home(request: Request, db: Session = Depends(get_db)):
     """
-    Ruta principală care servește interfața de Login (index.html).
-    Trimitem obiectul 'request' către Jinja2 pentru a putea genera corect link-urile către CSS/JS.
+    Pagina de start: caruselul cu cărți recomandate, categoriile și câteva cărți din catalog.
     """
+    books = (
+        db.query(Book)
+        .order_by(Book.id)
+        .limit(FEATURED_BOOKS_COUNT + MORE_BOOKS_COUNT)
+        .all()
+    )
+    books_for_page = [book_for_page(book) for book in books]
 
     return templates.TemplateResponse(
         request=request,
-        name="index.html",
+        name="home.html",
+        context={
+            "featured_books": books_for_page[:FEATURED_BOOKS_COUNT],
+            "more_books": books_for_page[FEATURED_BOOKS_COUNT:],
+            "categories": db.query(Category).order_by(Category.name).all(),
+        }
+    )
+
+@app.get("/login", response_class=HTMLResponse, include_in_schema=False)
+async def read_login(request: Request):
+    """
+    Pagina de autentificare.
+    """
+    return templates.TemplateResponse(
+        request=request,
+        name="login.html",
         context={"recaptcha_site_key": RECAPTCHA_SITE_KEY}
     )
 
-@app.get("/catalog", response_class=HTMLResponse)
+@app.get("/register", response_class=HTMLResponse, include_in_schema=False)
+async def read_register(request: Request):
+    """
+    Pagina de creare a unui cont nou.
+    """
+    return templates.TemplateResponse(
+        request=request,
+        name="register.html",
+        context={"recaptcha_site_key": RECAPTCHA_SITE_KEY}
+    )
+
+@app.get("/catalog", response_class=HTMLResponse, include_in_schema=False)
 async def read_catalog(request: Request):
     """
-    Ruta care servește interfața principală cu lista de cărți.
+    Pagina cu lista de cărți. Poate fi văzută și fără autentificare.
     """
     return templates.TemplateResponse(request=request, name="catalog.html", context={})
+
+@app.get("/robots.txt", response_class=PlainTextResponse, include_in_schema=False)
+async def robots_txt():
+    """
+    Spune motoarelor de căutare ce pagini pot indexa.
+    """
+    return "User-agent: *\nAllow: /\nDisallow: /docs\nDisallow: /redoc\nDisallow: /auth/\n"
 
 SWAGGER_CSRF_INTERCEPTOR = """SwaggerUIBundle({
         requestInterceptor: (request) => {
