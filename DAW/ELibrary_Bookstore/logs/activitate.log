@@ -77,3 +77,9 @@
 2026-11-19 00:35:19 - INFO - message='Request to Stripe api' method=get url=https://api.stripe.com/v1/checkout/sessions/cs_test_a0LidHibB75Erqlgwo3m94MDu1LLfIATv2eSQl42D8Dk8yqlefJJQvcTAW
 2026-11-19 00:35:19 - INFO - message='Stripe API response' path=https://api.stripe.com/v1/checkout/sessions/cs_test_a0LidHibB75Erqlgwo3m94MDu1LLfIATv2eSQl42D8Dk8yqlefJJQvcTAW response_code=200
 2026-11-19 00:35:19 - INFO - PAYMENT SUCCESS: Payment confirmed for user alex@alex.com (Amount: 39.9 RON, Transaction ID: 1).
+2026-11-21 15:14:48 - INFO - HTTP Request: POST https://www.google.com/recaptcha/api/siteverify "HTTP/1.1 200 OK"
+2026-11-21 15:14:48 - INFO - LOGIN SUCCESS: User alex@alex.com successfully logged in (Swagger: False).
+2026-11-21 15:14:48 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).
+2026-11-21 15:32:08 - INFO - HTTP Request: POST https://www.google.com/recaptcha/api/siteverify "HTTP/1.1 200 OK"
+2026-11-21 15:32:08 - INFO - LOGIN SUCCESS: User alex@alex.com successfully logged in (Swagger: False).
+2026-11-21 15:32:08 - INFO - BOOKS RETRIEVED: List of books accessed (Search: 'None', Category: None, Digital: None).

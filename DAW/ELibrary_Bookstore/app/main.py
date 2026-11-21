@@ -7,6 +7,7 @@ from app.api.categories import router as categories_router
 from app.api.auth import router as auth_router
 from fastapi.staticfiles import StaticFiles
 from app.core.limiter import rate_limit_middleware
+from app.core.captcha import RECAPTCHA_SITE_KEY
 from fastapi.responses import JSONResponse, HTMLResponse
 from contextlib import asynccontextmanager
 from fastapi.templating import Jinja2Templates
@@ -49,7 +50,11 @@ async def read_root(request: Request):
     Trimitem obiectul 'request' către Jinja2 pentru a putea genera corect link-urile către CSS/JS.
     """
 
-    return templates.TemplateResponse(request=request, name="index.html", context={})
+    return templates.TemplateResponse(
+        request=request,
+        name="index.html",
+        context={"recaptcha_site_key": RECAPTCHA_SITE_KEY}
+    )
 
 @app.get("/catalog", response_class=HTMLResponse)
 async def read_catalog(request: Request):

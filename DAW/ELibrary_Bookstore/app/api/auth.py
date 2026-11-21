@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Form, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.core.logger import logger
+from app.core.captcha import RECAPTCHA_SECRET_KEY
 from app.core.database import get_db
 from app.schemas.schemas import UserCreate, UserResponse, Token
 from app.services.repository import user_repo, role_repo
@@ -70,7 +71,6 @@ async def login_for_access_token(
                 detail="Câmpul CAPTCHA este obligatoriu!"
             )
             
-        RECAPTCHA_SECRET_KEY = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe" 
         async with httpx.AsyncClient() as client:
             google_response = await client.post(
                 "https://www.google.com/recaptcha/api/siteverify",
