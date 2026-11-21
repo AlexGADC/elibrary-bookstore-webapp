@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Payment | E-Library &amp; Bookstore{% endblock %}
+{% block description %}The result of your payment at E-Library &amp; Bookstore.{% endblock %}
+
+{% block head %}
+    <!-- A personal page: search engines should not list it -->
+    <meta name="robots" content="noindex">
+{% endblock %}
+
+{% block content %}
+<section class="container page-section message-page" id="paymentResult">
+    <h1 id="paymentTitle">Checking your payment...</h1>
+    <p class="muted" id="paymentText">This only takes a moment.</p>
+
+    <div class="button-row button-row-center" id="paymentLinks" hidden>
+        <a class="btn btn-primary" id="paymentBookLink" href="/catalog">Go to the book</a>
+        <a class="btn btn-outline" href="/catalog">Back to the catalog</a>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+    <script src="/static/js/payment.js?v={{ asset_version }}"></script>
+{% endblock %}

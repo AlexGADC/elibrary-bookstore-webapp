@@ -67,9 +67,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const info = document.createElement('div');
         info.className = 'book-info';
 
+        // The title is a link to the book's page; CSS stretches it over the whole card
         const title = document.createElement('h2');
         title.className = 'book-title';
-        title.textContent = book.title;
+
+        const titleLink = document.createElement('a');
+        titleLink.href = `/book/${encodeURIComponent(book.id)}`;
+        titleLink.textContent = book.title;
+        title.appendChild(titleLink);
 
         const author = document.createElement('p');
         author.className = 'book-author';

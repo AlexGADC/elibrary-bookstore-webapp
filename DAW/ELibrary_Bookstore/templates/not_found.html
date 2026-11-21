@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Page not found | E-Library &amp; Bookstore{% endblock %}
+{% block description %}The page you were looking for does not exist. Browse the E-Library catalog instead.{% endblock %}
+
+{% block content %}
+<section class="container page-section message-page">
+    <h1>We couldn't find that page</h1>
+    <p class="muted">The book or page you were looking for doesn't exist, or it has been removed.</p>
+    <div class="button-row button-row-center">
+        <a class="btn btn-primary" href="/catalog">Browse the catalog</a>
+        <a class="btn btn-outline" href="/">Go to the home page</a>
+    </div>
+</section>
+{% endblock %}

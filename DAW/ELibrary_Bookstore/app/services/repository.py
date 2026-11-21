@@ -167,6 +167,40 @@ class TransactionRepository(BaseRepository[LoanPurchase, TransactionCreate]):
         db.refresh(new_transaction)
         return new_transaction
 
+    def buy_ebook(self, db: Session, user_id: int, book_id: int):
+        """
+        Starts the purchase of the e-book edition of a book.
+        The stock is not touched: it counts printed copies only, and an e-book never runs out.
+        """
+        from app.models.database_models import Book
+        book = db.query(Book).filter(Book.id == book_id).first()
+
+        if not book:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found.")
+        if not book.digital_file_url:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="This book has no e-book edition.")
+
+        already_owned = db.query(LoanPurchase).filter(
+            LoanPurchase.user_id == user_id,
+            LoanPurchase.book_id == book_id,
+            LoanPurchase.type == "buy_ebook",
+            LoanPurchase.status == "completed"
+        ).first()
+        if already_owned:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You already own this e-book.")
+
+        new_transaction = LoanPurchase(
+            user_id=user_id,
+            book_id=book_id,
+            type="buy_ebook",
+            status="pending"
+        )
+
+        db.add(new_transaction)
+        db.commit()
+        db.refresh(new_transaction)
+        return new_transaction
+
     def borrow_book(self, db: Session, user_id: int, book_id: int, borrow_days: int = 14):
         from app.models.database_models import Book
         book = db.query(Book).filter(Book.id == book_id).first()

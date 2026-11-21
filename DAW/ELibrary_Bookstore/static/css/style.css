@@ -228,6 +228,38 @@ img {
     color: var(--navy-dark);
 }
 
+.btn-outline {
+    border-color: var(--navy);
+    background-color: transparent;
+    color: var(--navy-dark);
+}
+
+.btn-outline:hover {
+    background-color: var(--navy);
+    color: #ffffff;
+}
+
+.btn-success {
+    background-color: var(--green);
+    color: #ffffff;
+}
+
+.btn-success:hover {
+    background-color: #17633a;
+    color: #ffffff;
+}
+
+.btn-success-outline {
+    border-color: var(--green);
+    background-color: transparent;
+    color: #17633a;
+}
+
+.btn-success-outline:hover {
+    background-color: var(--green);
+    color: #ffffff;
+}
+
 .btn-small {
     padding: 8px 14px;
     font-size: 0.95rem;
@@ -310,6 +342,12 @@ select:focus {
     border-color: #f0b8b1;
     background-color: #fdecea;
     color: var(--red);
+}
+
+.alert-info {
+    border-color: #b9cdf3;
+    background-color: #e6eefc;
+    color: var(--accent-dark);
 }
 
 .alert-success {
@@ -433,6 +471,30 @@ select:focus {
 .book-title {
     margin: 0;
     font-size: 1.05rem;
+}
+
+/* The title is the link to the book's page. Its ::after is stretched over the whole card,
+   so clicking anywhere on the card opens the book. */
+.book-card {
+    position: relative;
+}
+
+.book-title a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.book-title a::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+
+.book-card:hover .book-title a {
+    color: var(--accent);
 }
 
 .book-author {
@@ -800,6 +862,131 @@ select:focus {
 .cta-inner p {
     margin: 0;
     color: var(--text-muted);
+}
+
+/* ---------- Book page ---------- */
+.breadcrumbs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+}
+
+.book-detail {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    align-items: start;
+    gap: 44px;
+    padding: 32px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background-color: var(--surface);
+    box-shadow: var(--shadow);
+    animation: fade-in-up 0.45s ease-out both;
+}
+
+.book-detail-cover img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 10px 26px rgba(31, 45, 58, 0.25);
+}
+
+.book-detail-info h1 {
+    margin-bottom: 4px;
+}
+
+.book-detail-author {
+    margin-bottom: 12px;
+    font-size: 1.1rem;
+    color: var(--text-muted);
+}
+
+.book-detail-price {
+    margin: 16px 0 12px;
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: var(--green);
+}
+
+.book-detail-ebook-price {
+    margin-top: -6px;
+    color: var(--text-muted);
+}
+
+.book-detail-description {
+    max-width: 640px;
+    font-size: 1.05rem;
+}
+
+.book-actions {
+    margin: 20px 0 28px;
+}
+
+.button-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.button-row-center {
+    justify-content: center;
+}
+
+.guest-box {
+    padding: 18px;
+    border: 1px dashed #b6c0ca;
+    border-radius: var(--radius);
+    background-color: var(--background);
+}
+
+.guest-box p {
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.details-heading {
+    font-size: 1.2rem;
+}
+
+.details-table {
+    width: 100%;
+    max-width: 560px;
+    border-collapse: collapse;
+}
+
+.details-table th,
+.details-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: top;
+}
+
+.details-table th {
+    width: 40%;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.details-table tr:last-child th,
+.details-table tr:last-child td {
+    border-bottom: 0;
+}
+
+/* Pages that only show a short message: page not found, payment result */
+.message-page {
+    max-width: 640px;
+    padding-top: 72px;
+    padding-bottom: 96px;
+    text-align: center;
+}
+
+.message-page .button-row {
+    margin-top: 24px;
 }
 
 /* ---------- Footer ---------- */

@@ -86,6 +86,20 @@ class TransactionCreate(BaseModel):
     transaction_type: str = Field(..., description="'borrow' sau 'purchase'")
     
 
+class MyTransactionResponse(BaseModel):
+    """One loan or purchase of the logged-in user, together with the book it is about."""
+    id: int
+    book_id: int
+    book_title: str
+    book_author: str
+    cover_image_url: Optional[str] = None
+    has_digital_file: bool
+    type: str
+    status: str
+    borrowed_at: datetime
+    due_date: Optional[datetime] = None
+
+
 class TransactionResponse(BaseModel):
     """Ce returnăm înapoi ca bon/chitanță."""
     id: int

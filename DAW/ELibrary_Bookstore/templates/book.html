@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}{{ book.title }} by {{ book.author }} | E-Library &amp; Bookstore{% endblock %}
+{% block description %}{{ meta_description }}{% endblock %}
+
+{% block content %}
+<section class="container page-section">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span aria-hidden="true">/</span>
+        <a href="/catalog">Catalog</a>
+        {% if book.category_name %}
+        <span aria-hidden="true">/</span>
+        <a href="/catalog?category_id={{ book.category_id }}">{{ book.category_name }}</a>
+        {% endif %}
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">{{ book.title }}</span>
+    </nav>
+
+    <!-- book.js reads the data-... values below to know which book this page is about -->
+    <article class="book-detail" id="bookDetail"
+             data-book-id="{{ book.id }}"
+             data-book-title="{{ book.title }}"
+             data-price="{{ book.price }}"
+             data-stock="{{ book.stock }}"
+             data-has-file="{{ 'true' if book.has_digital_file else 'false' }}">
+
+        <div class="book-detail-cover">
+            <img src="{{ book.cover_url }}" alt="Cover of {{ book.title }}" width="300" height="450">
+        </div>
+
+        <div class="book-detail-info">
+            <h1>{{ book.title }}</h1>
+            <p class="book-detail-author">by {{ book.author }}</p>
+
+            <div class="book-badges">
+                <span class="badge {{ 'badge-in-stock' if book.in_stock else 'badge-out-of-stock' }}" id="stockBadge">{{ 'In stock' if book.in_stock else 'Out of stock' }}</span>
+                {% if book.is_digital %}
+                <span class="badge badge-digital">E-book</span>
+                {% endif %}
+            </div>
+
+            <p class="book-detail-price">{{ book.price }} RON</p>
+            {% if book.has_digital_file %}
+            <p class="book-detail-ebook-price">E-book edition: <strong>{{ book.ebook_price }} RON</strong> (half price, download right away)</p>
+            {% endif %}
+
+            {% if book.description %}
+            <p class="book-detail-description">{{ book.description }}</p>
+            {% endif %}
+
+            <!-- Messages after an action ("Borrowed!", errors ...) -->
+            <div class="alert" id="bookMessage" role="status" aria-live="polite" hidden></div>
+
+            <!-- What the logged-in visitor already has: "You own this book", "Borrowed until ..." -->
+            <div class="alert alert-info" id="ownershipNote" hidden></div>
+
+            <div class="book-actions">
+                <!-- Visitors who are not logged in -->
+                <div class="guest-box" data-auth="guest">
+                    <p>Log in to borrow or buy this book.</p>
+                    <div class="button-row">
+                        <a class="btn btn-primary" href="/login?next=/book/{{ book.id }}">Log in</a>
+                        <a class="btn btn-outline" href="/register">Create account</a>
+                    </div>
+                </div>
+
+                <!-- Logged-in users: book.js shows only the buttons that make sense right now -->
+                <div class="button-row">
+                    <button class="btn btn-primary" id="borrowBtn" type="button" hidden>Borrow for 14 days</button>
+                    <button class="btn btn-success" id="buyBtn" type="button" hidden>{{ 'Buy printed book' if book.has_digital_file else 'Buy' }} for {{ book.price }} RON</button>
+                    {% if book.has_digital_file %}
+                    <button class="btn btn-success-outline" id="buyEbookBtn" type="button" hidden>Buy e-book for {{ book.ebook_price }} RON</button>
+                    {% endif %}
+                    <button class="btn btn-outline" id="returnBtn" type="button" hidden>Return this book</button>
+                    <button class="btn btn-outline" id="downloadBtn" type="button" hidden>Download e-book</button>
+                </div>
+            </div>
+
+            <h2 class="details-heading">Details</h2>
+            <table class="details-table">
+                <tbody>
+                    <tr>
+                        <th scope="row">Author</th>
+                        <td>{{ book.author }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Category</th>
+                        <td>
+                            {% if book.category_name %}
+                            <a href="/catalog?category_id={{ book.category_id }}">{{ book.category_name }}</a>
+                            {% else %}
+                            Not set
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Format</th>
+                        <td>{{ 'Printed book and e-book' if book.is_digital else 'Printed book' }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Copies in stock</th>
+                        <td id="stockCell">{{ book.stock }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">{{ 'Printed book price' if book.has_digital_file else 'Price' }}</th>
+                        <td>{{ book.price }} RON</td>
+                    </tr>
+                    {% if book.has_digital_file %}
+                    <tr>
+                        <th scope="row">E-book price</th>
+                        <td>{{ book.ebook_price }} RON</td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                        <th scope="row">Loan period</th>
+                        <td>14 days</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </article>
+</section>
+
+{% if related_books %}
+<section class="container page-section section-tight">
+    <h2 class="section-title">More in {{ book.category_name }}</h2>
+
+    <div class="book-grid">
+        {% for related in related_books %}
+        <article class="book-card">
+            <div class="book-cover-container">
+                <img class="book-cover" src="{{ related.cover_url }}" alt="Cover of {{ related.title }}" width="300" height="450" loading="lazy">
+            </div>
+            <div class="book-info">
+                <h3 class="book-title"><a href="/book/{{ related.id }}">{{ related.title }}</a></h3>
+                <p class="book-author">by {{ related.author }}</p>
+                <div class="book-badges">
+                    <span class="badge {{ 'badge-in-stock' if related.in_stock else 'badge-out-of-stock' }}">{{ 'In stock' if related.in_stock else 'Out of stock' }}</span>
+                    {% if related.is_digital %}
+                    <span class="badge badge-digital">E-book</span>
+                    {% endif %}
+                </div>
+                <div class="book-meta">
+                    <p class="book-price">{{ related.price }} RON</p>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+    <script src="/static/js/book.js?v={{ asset_version }}"></script>
+{% endblock %}

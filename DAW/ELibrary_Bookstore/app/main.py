@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.database import engine, Base, SessionLocal, get_db
 from app.models.database_models import Book, Category
 from app.services.repository import role_repo
-from app.api.books import router as books_router
+from app.api.books import router as books_router, get_ebook_price
 from app.api.categories import router as categories_router
 from app.api.auth import router as auth_router
 from fastapi.staticfiles import StaticFiles
@@ -46,7 +46,7 @@ app.include_router(categories_router)
 app.include_router(auth_router)
 
 # Changing this number makes browsers download the CSS and JS files again instead of using old copies.
-ASSET_VERSION = "2.3"
+ASSET_VERSION = "2.5"
 templates.env.globals["asset_version"] = ASSET_VERSION
 
 NO_COVER_IMAGE = "/static/img/no-cover.svg"
@@ -54,7 +54,7 @@ FEATURED_BOOKS_COUNT = 5   # slides in the home page carousel
 MORE_BOOKS_COUNT = 5       # books shown under it
 
 def book_for_page(book: Book) -> dict:
-    """The fields of a book that the home page template shows."""
+    """The fields of a book that the page templates show."""
     return {
         "id": book.id,
         "title": book.title,
@@ -62,8 +62,13 @@ def book_for_page(book: Book) -> dict:
         "description": book.description,
         "price": f"{book.price:.2f}",
         "cover_url": book.cover_image_url or NO_COVER_IMAGE,
-        "in_stock": book.stock > 0,
+        "stock": book.stock or 0,
+        "in_stock": (book.stock or 0) > 0,
         "is_digital": bool(book.is_digital),
+        "has_digital_file": bool(book.digital_file_url),
+        "ebook_price": f"{get_ebook_price(book):.2f}" if book.digital_file_url else None,
+        "category_id": book.category_id,
+        "category_name": book.category.name if book.category else None,
     }
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
@@ -117,6 +122,53 @@ async def read_catalog(request: Request):
     Pagina cu lista de cărți. Poate fi văzută și fără autentificare.
     """
     return templates.TemplateResponse(request=request, name="catalog.html", context={})
+
+RELATED_BOOKS_COUNT = 5
+
+@app.get("/book/{book_id}", response_class=HTMLResponse, include_in_schema=False)
+def read_book(book_id: int, request: Request, db: Session = Depends(get_db)):
+    """
+    Pagina unei cărți: detalii, împrumut, cumpărare, returnare și descărcare.
+    """
+    book = db.query(Book).filter(Book.id == book_id).first()
+
+    if not book:
+        return templates.TemplateResponse(request=request, name="not_found.html", context={}, status_code=404)
+
+    related_books = []
+    if book.category_id is not None:
+        related_books = (
+            db.query(Book)
+            .filter(Book.category_id == book.category_id, Book.id != book.id)
+            .order_by(Book.id)
+            .limit(RELATED_BOOKS_COUNT)
+            .all()
+        )
+
+    page_book = book_for_page(book)
+
+    # The short text search engines show under the page title
+    meta_description = f"{book.title} by {book.author_name}. {book.description or ''}".strip()
+    if len(meta_description) > 155:
+        meta_description = meta_description[:152].rstrip() + "..."
+
+    return templates.TemplateResponse(
+        request=request,
+        name="book.html",
+        context={
+            "book": page_book,
+            "meta_description": meta_description,
+            "related_books": [book_for_page(related) for related in related_books],
+        }
+    )
+
+@app.get("/payment/success", response_class=HTMLResponse, include_in_schema=False)
+async def read_payment_result(request: Request):
+    """
+    Pagina la care Stripe trimite cumpărătorul după plată. Scriptul paginii cere serverului
+    să verifice plata și afișează rezultatul.
+    """
+    return templates.TemplateResponse(request=request, name="payment_result.html", context={})
 
 @app.get("/robots.txt", response_class=PlainTextResponse, include_in_schema=False)
 async def robots_txt():

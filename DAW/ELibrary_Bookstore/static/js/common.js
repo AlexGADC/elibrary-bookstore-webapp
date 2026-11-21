@@ -94,9 +94,10 @@ function hideMessage(element) {
     }
 }
 
-// ---------- Menu ----------
-document.addEventListener('DOMContentLoaded', () => {
-    // Show "Log in / Create account" to visitors and "Log out" to logged-in users
+// ---------- Visitor or logged-in user ----------
+// Elements marked data-auth="guest" are for visitors, data-auth="user" for logged-in users.
+// Call this again whenever the login state changes (for example when the token has expired).
+function applyAuthState() {
     const loggedIn = isLoggedIn();
 
     document.querySelectorAll('[data-auth="guest"]').forEach((element) => {
@@ -106,6 +107,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[data-auth="user"]').forEach((element) => {
         element.hidden = !loggedIn;
     });
+}
+
+// ---------- Menu ----------
+document.addEventListener('DOMContentLoaded', () => {
+    applyAuthState();
 
     // Highlight the menu link of the page we are on
     document.querySelectorAll('.site-nav .nav-link').forEach((link) => {

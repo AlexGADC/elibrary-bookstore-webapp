@@ -70,6 +70,12 @@
         gap: 16px;
     }
 
+    .book-detail {
+        grid-template-columns: 220px 1fr;
+        gap: 28px;
+        padding: 24px;
+    }
+
     .feature-card {
         padding: 18px;
     }
@@ -208,6 +214,31 @@
 
     .feature-grid {
         grid-template-columns: 1fr;
+    }
+
+    /* On a phone the cover sits above the text */
+    .book-detail {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 18px;
+    }
+
+    .book-detail-cover img {
+        max-width: 200px;
+        margin: 0 auto;
+    }
+
+    .book-detail-price {
+        font-size: 1.5rem;
+    }
+
+    .book-actions .btn {
+        width: 100%;
+    }
+
+    .message-page {
+        padding-top: 44px;
+        padding-bottom: 56px;
     }
 
     .cta-inner {

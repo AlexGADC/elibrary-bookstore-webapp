@@ -31,8 +31,8 @@
                             <p class="slide-description">{{ book.description }}</p>
                             {% endif %}
                             <p class="slide-price">{{ book.price }} RON</p>
-                            <a class="btn btn-light" href="/catalog?search={{ book.title|urlencode }}"
-                               aria-label="See {{ book.title }} in the catalog">See it in the catalog</a>
+                            <a class="btn btn-light" href="/book/{{ book.id }}"
+                               aria-label="View {{ book.title }}">View this book</a>
                         </div>
                     </div>
                 </li>
@@ -73,7 +73,7 @@
         <article class="feature-card">
             <span class="feature-number" aria-hidden="true">3</span>
             <h3>Read the e-book</h3>
-            <p>Books marked "E-book" come with a digital edition you can download after you buy or borrow them.</p>
+            <p>Books marked "E-book" also have a digital edition at half the price. Buy it and download it right away.</p>
         </article>
     </div>
 </section>
@@ -104,7 +104,7 @@
                 <img class="book-cover" src="{{ book.cover_url }}" alt="Cover of {{ book.title }}" width="300" height="450" loading="lazy">
             </div>
             <div class="book-info">
-                <h3 class="book-title">{{ book.title }}</h3>
+                <h3 class="book-title"><a href="/book/{{ book.id }}">{{ book.title }}</a></h3>
                 <p class="book-author">by {{ book.author }}</p>
                 <div class="book-badges">
                     {% if book.in_stock %}

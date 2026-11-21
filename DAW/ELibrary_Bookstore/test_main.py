@@ -1,11 +1,13 @@
 import uuid
+import stripe
+from decimal import Decimal
 from types import SimpleNamespace
 from fastapi import Request
 from fastapi.testclient import TestClient
 from app.main import app
 from app.core.limiter import reset_rate_limits
 from app.core import security, captcha
-from app.api.books import get_site_url
+from app.api.books import get_site_url, get_ebook_price
 from app.core.database import SessionLocal
 from app.models.database_models import User
 from app.services.repository import role_repo
@@ -249,3 +251,50 @@ def test_docs_shortcut_needs_the_setting(monkeypatch):
     # A request that only mentions /docs from another website is not accepted as the docs page
     response = client.post("/auth/login", data=wrong_login, headers={"Referer": "http://evil.example/docs"})
     assert response.status_code == 400
+
+
+# Test 16: Pages - a book that does not exist shows the "not found" page
+def test_missing_book_page_is_not_found():
+    response = client.get("/book/999999")
+    assert response.status_code == 404
+    assert "text/html" in response.headers["content-type"]
+    assert "couldn't find" in response.text
+
+
+# Test 17: Authorization - the list of my loans and purchases needs a login
+def test_my_transactions_requires_login():
+    response = client.get("/books/my-transactions")
+    assert response.status_code == 401
+
+
+# Test 18: Payments - a paid checkout cannot be used to confirm a different purchase
+def test_payment_must_belong_to_the_purchase(monkeypatch):
+    # Built with Stripe's own class, so the test sees exactly what the real Stripe library returns
+    paid_checkout = stripe.StripeObject.construct_from(
+        {"payment_status": "paid", "amount_total": 3990, "metadata": {"transaction_id": "999999"}},
+        "sk_test_fake"
+    )
+    monkeypatch.setattr("app.api.books.stripe.checkout.Session.retrieve", lambda session_id: paid_checkout)
+
+    # A different purchase than the one the checkout was created for: refused
+    response = client.get("/books/payment-success", params={"session_id": "cs_test_fake", "transaction_id": 6})
+    assert response.status_code == 400
+    assert "does not belong" in response.json()["detail"]
+
+    # The matching purchase passes that check (it then stops only because purchase 999999 does not exist)
+    response = client.get("/books/payment-success", params={"session_id": "cs_test_fake", "transaction_id": 999999})
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Transaction not found."
+
+
+# Test 19: E-books - the e-book costs half the printed price, rounded to two decimals
+def test_ebook_price_is_half_the_printed_price():
+    assert get_ebook_price(SimpleNamespace(price=Decimal("39.90"))) == Decimal("19.95")
+    assert get_ebook_price(SimpleNamespace(price=Decimal("44.90"))) == Decimal("22.45")
+    assert get_ebook_price(SimpleNamespace(price=Decimal("29.99"))) == Decimal("15.00")  # 14.995 rounds up
+
+
+# Test 20: Authorization - buying an e-book needs a login
+def test_buy_ebook_requires_login():
+    response = client.post("/books/1/buy-ebook")
+    assert response.status_code == 401

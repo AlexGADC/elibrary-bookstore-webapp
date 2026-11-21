@@ -27,6 +27,14 @@ document.addEventListener('DOMContentLoaded', () => {
         submitButton.textContent = isBusy ? busyText : normalText;
     }
 
+    // A link such as /login?next=/book/5 brings the visitor back to that page after logging in.
+    // Only addresses inside this site are accepted ("/something"), never another website.
+    function getPageAfterLogin() {
+        const next = new URLSearchParams(window.location.search).get('next');
+        const isLocalPage = next && next.startsWith('/') && !next.startsWith('//') && !next.includes('\\');
+        return isLocalPage ? next : '/catalog';
+    }
+
     // ---------- Log in ----------
     const loginForm = document.getElementById('loginForm');
 
@@ -71,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (response.ok) {
                     const data = await response.json();
                     setToken(data.access_token);
-                    window.location.href = '/catalog';
+                    window.location.href = getPageAfterLogin();
                     return;
                 }
 

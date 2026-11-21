@@ -11,8 +11,8 @@ An online library and bookstore where users can browse a catalog of books, borro
 - Create an account and log in (the login is protected by reCAPTCHA)
 - Browse the book catalog, search by title or author, filter by category and format
 - Borrow a book for 14 days and return it
-- Buy a book through Stripe Checkout
-- Download the e-book (PDF or EPUB) of a book they bought or currently borrow
+- Buy the printed book through Stripe Checkout
+- Buy the e-book edition (PDF or EPUB) at half the price and download it right away
 
 **For administrators**
 
@@ -20,7 +20,7 @@ An online library and bookstore where users can browse a catalog of books, borro
 - Upload cover images and e-book files
 - Create and delete categories
 
-The web interface currently covers login and the catalog; the other actions are available through the interactive API page (`/docs`) while the remaining pages are being built.
+Everything a reader does is available in the web interface. The administrator actions are done through the interactive API page (`/docs`) while the admin pages are being built.
 
 ## Technologies
 

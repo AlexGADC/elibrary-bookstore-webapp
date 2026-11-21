@@ -8,10 +8,11 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_
 from typing import Optional, List
+from decimal import Decimal, ROUND_HALF_UP
 from app.api.deps import get_current_user
 from app.models.database_models import User, Book, Role, LoanPurchase
 from app.core.database import get_db
-from app.schemas.schemas import BookCreate, BookResponse, TransactionResponse, BookUpdate
+from app.schemas.schemas import BookCreate, BookResponse, TransactionResponse, BookUpdate, MyTransactionResponse
 from app.services.repository import book_repo, transaction_repo
 from PIL import Image
 from dotenv import load_dotenv
@@ -48,10 +49,97 @@ def get_site_url(request: Request) -> str:
     return f"{scheme}://{host}"
 
 
+# An e-book costs half the price of the printed book.
+EBOOK_PRICE_SHARE = Decimal("0.5")
+
+def get_ebook_price(book: Book) -> Decimal:
+    """The price of the e-book edition: half the printed price, rounded to two decimals."""
+    printed_price = Decimal(str(book.price))
+    return (printed_price * EBOOK_PRICE_SHARE).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
+def create_checkout(request: Request, book: Book, transaction: LoanPurchase, price: Decimal, product_name: str):
+    """
+    Creates the Stripe payment page for one purchase (printed book or e-book) and returns it.
+    The transaction ID is stored inside the checkout, so the payment can later be matched to it.
+    """
+    site_url = get_site_url(request)
+    price_in_bani = int((Decimal(str(price)) * 100).to_integral_value(rounding=ROUND_HALF_UP))
+
+    return stripe.checkout.Session.create(
+        line_items=[{
+            'price_data': {
+                'currency': 'ron',
+                'product_data': {
+                    'name': product_name,
+                    'description': f"Author: {book.author_name}"
+                },
+                'unit_amount': price_in_bani,
+            },
+            'quantity': 1,
+        }],
+        mode='payment',
+        metadata={'transaction_id': str(transaction.id)},
+        success_url=f"{site_url}/payment/success?session_id={{CHECKOUT_SESSION_ID}}&transaction_id={transaction.id}",
+        cancel_url=f"{site_url}/book/{book.id}?payment=cancelled"
+    )
+
+
+def checkout_reply(transaction: LoanPurchase, checkout_session) -> dict:
+    """What the buy routes send back: the new transaction and the address of the payment page."""
+    return {
+        "id": transaction.id,
+        "user_id": transaction.user_id,
+        "book_id": transaction.book_id,
+        "type": transaction.type,
+        "status": transaction.status,
+        "borrowed_at": transaction.borrowed_at,
+        "due_date": transaction.due_date,
+        "payment_url": checkout_session.url
+    }
+
+
 router = APIRouter(
     prefix="/books",
     tags=["Books Catalog"]
 )
+
+@router.get("/my-transactions", response_model=List[MyTransactionResponse])
+def get_my_transactions(
+    book_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Returnează împrumuturile și cumpărăturile utilizatorului logat, cele mai noi primele.
+    Opțional, doar pentru o singură carte (book_id).
+    """
+    query = (
+        db.query(LoanPurchase, Book)
+        .join(Book, Book.id == LoanPurchase.book_id)
+        .filter(LoanPurchase.user_id == current_user.id)
+    )
+
+    if book_id is not None:
+        query = query.filter(LoanPurchase.book_id == book_id)
+
+    rows = query.order_by(LoanPurchase.borrowed_at.desc(), LoanPurchase.id.desc()).all()
+
+    return [
+        {
+            "id": transaction.id,
+            "book_id": book.id,
+            "book_title": book.title,
+            "book_author": book.author_name,
+            "cover_image_url": book.cover_image_url,
+            "has_digital_file": bool(book.digital_file_url),
+            "type": transaction.type,
+            "status": transaction.status,
+            "borrowed_at": transaction.borrowed_at,
+            "due_date": transaction.due_date,
+        }
+        for transaction, book in rows
+    ]
 
 @router.get("/payment-success")
 def payment_success_endpoint(
@@ -68,6 +156,15 @@ def payment_success_endpoint(
         checkout_session = stripe.checkout.Session.retrieve(session_id)
         
         if checkout_session.payment_status == "paid":
+            # The payment must belong to THIS purchase. When the checkout was created we stored the
+            # transaction ID inside it; without this check, one paid checkout could be reused to
+            # mark any other pending purchase as paid.
+            # (Stripe gives us an object here, not a dictionary, so the value is read with getattr.)
+            paid_transaction_id = getattr(checkout_session.metadata, "transaction_id", None)
+            if str(paid_transaction_id) != str(transaction_id):
+                logger.warning(f"PAYMENT MISMATCH: Checkout session {session_id} was used for transaction ID {transaction_id}, but it belongs to {paid_transaction_id}.")
+                raise HTTPException(status_code=400, detail="This payment does not belong to that purchase.")
+
             transaction = transaction_repo.complete_transaction(db=db, transaction_id=transaction_id)
             
             if not transaction:
@@ -81,12 +178,18 @@ def payment_success_endpoint(
             logger.info(f"PAYMENT SUCCESS: Payment confirmed for user {user_email} (Amount: {amount_paid} RON, Transaction ID: {transaction_id}).")
             
             return {
-                "message": "Payment successful! The book is now yours.", 
+                "message": "Payment successful! The e-book is now yours." if transaction.type == "buy_ebook" else "Payment successful! The book is now yours.",
+                "type": transaction.type,
                 "transaction_id": transaction_id, 
-                "status": transaction.status
+                "status": transaction.status,
+                "book_id": transaction.book_id,
+                "paid": True
             }
         else:
-            return {"message": f"The payment has not been completed yet. Current status: {checkout_session.payment_status}"}
+            return {
+                "message": f"The payment has not been completed yet. Current status: {checkout_session.payment_status}",
+                "paid": False
+            }
             
     except stripe.StripeError as e:
         raise HTTPException(status_code=400, detail=f"Stripe error: {str(e)}")
@@ -321,8 +424,7 @@ def download_digital_file(
 ):
     """
     Descarcă fișierul digital (PDF / EPUB) al unei cărți.
-    Permis doar administratorilor și utilizatorilor care au cumpărat cartea
-    sau au un împrumut activ pentru ea.
+    Permis doar administratorilor și utilizatorilor care au cumpărat e-book-ul.
     """
 
     book = db.query(Book).filter(Book.id == book_id).first()
@@ -336,20 +438,20 @@ def download_digital_file(
     user_role = db.query(Role).filter(Role.id == current_user.role_id).first()
     is_admin = user_role is not None and user_role.name.lower() == "admin"
 
-    has_bought_or_borrowed = db.query(LoanPurchase).filter(
+    # Only people who bought the E-BOOK may download it. Buying the printed book or borrowing
+    # the book does not include the digital edition.
+    owns_ebook = db.query(LoanPurchase).filter(
         LoanPurchase.user_id == current_user.id,
         LoanPurchase.book_id == book_id,
-        or_(
-            and_(LoanPurchase.type == "buy", LoanPurchase.status == "completed"),
-            and_(LoanPurchase.type == "loan", LoanPurchase.status == "active")
-        )
+        LoanPurchase.type == "buy_ebook",
+        LoanPurchase.status == "completed"
     ).first() is not None
 
-    if not is_admin and not has_bought_or_borrowed:
-        logger.warning(f"DOWNLOAD DENIED: User {current_user.email} tried to download book ID: {book_id} without owning or borrowing it.")
+    if not is_admin and not owns_ebook:
+        logger.warning(f"DOWNLOAD DENIED: User {current_user.email} tried to download book ID: {book_id} without owning the e-book.")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied! You need to buy or borrow this book to download it."
+            detail="Access denied! You need to buy the e-book to download it."
         )
 
     file_path = book.digital_file_url.lstrip("/")
@@ -361,7 +463,12 @@ def download_digital_file(
 
     logger.info(f"FILE DOWNLOADED: User {current_user.email} downloaded the digital file for book ID: {book_id}.")
 
-    return FileResponse(file_path, filename=os.path.basename(file_path))
+    # "no-store" tells the browser not to keep a copy, so every download is checked by the server.
+    return FileResponse(
+        file_path,
+        filename=os.path.basename(file_path),
+        headers={"Cache-Control": "no-store"}
+    )
 
 @router.get("/", response_model=List[BookResponse])
 def get_books(
@@ -438,40 +545,35 @@ def buy_book_endpoint(
         
     transaction = transaction_repo.buy_book(db=db, user_id=current_user.id, book_id=book_id)
 
-    price_in_bani = int(book.price * 100)
-    site_url = get_site_url(request)
-
-    checkout_session = stripe.checkout.Session.create(
-        line_items=[{
-            'price_data': {
-                'currency': 'ron',
-                'product_data': {
-                    'name': book.title,
-                    'description': f"Author: {book.author_name}"
-                },
-                'unit_amount': price_in_bani,
-            },
-            'quantity': 1,
-        }],
-        mode='payment',
-        
-        success_url=f"{site_url}/books/payment-success?session_id={{CHECKOUT_SESSION_ID}}&transaction_id={transaction.id}",
-        
-        cancel_url=f"{site_url}/docs"
-    )
+    checkout_session = create_checkout(request, book, transaction, book.price, book.title)
 
     logger.info(f"CHECKOUT INITIATED: User {current_user.email} started the purchase process for book ID: {book_id} (Transaction ID: {transaction.id}).")
 
-    return {
-        "id": transaction.id,
-        "user_id": transaction.user_id,
-        "book_id": transaction.book_id,
-        "type": transaction.type,
-        "status": transaction.status,
-        "borrowed_at": transaction.borrowed_at,
-        "due_date": transaction.due_date,
-        "payment_url": checkout_session.url  
-    }
+    return checkout_reply(transaction, checkout_session)
+
+@router.post("/{book_id}/buy-ebook", response_model=TransactionResponse, status_code=status.HTTP_201_CREATED)
+def buy_ebook_endpoint(
+    book_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Cumpără ediția digitală (e-book) a unei cărți, la jumătate din prețul cărții tipărite.
+    Nu modifică stocul, care numără doar exemplarele tipărite.
+    """
+    book = db.query(Book).filter(Book.id == book_id).first()
+    if not book:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found.")
+
+    transaction = transaction_repo.buy_ebook(db=db, user_id=current_user.id, book_id=book_id)
+
+    ebook_price = get_ebook_price(book)
+    checkout_session = create_checkout(request, book, transaction, ebook_price, f"{book.title} (e-book)")
+
+    logger.info(f"CHECKOUT INITIATED: User {current_user.email} started buying the e-book of book ID: {book_id} for {ebook_price} RON (Transaction ID: {transaction.id}).")
+
+    return checkout_reply(transaction, checkout_session)
 
 @router.post("/{book_id}/borrow", response_model=TransactionResponse, status_code=status.HTTP_201_CREATED)
 def borrow_book_endpoint(
