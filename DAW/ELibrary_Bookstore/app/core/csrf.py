@@ -75,6 +75,7 @@ async def csrf_protection_middleware(request: Request, call_next):
         header_token = request.headers.get(CSRF_HEADER_NAME)
         tokens_match = (
             has_valid_cookie
+            and cookie_token is not None
             and header_token is not None
             and hmac.compare_digest(header_token.encode("utf-8"), cookie_token.encode("utf-8"))
         )

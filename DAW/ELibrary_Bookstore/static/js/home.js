@@ -21,14 +21,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const dotsContainer = document.getElementById('carouselDots');
     const toggleButton = document.getElementById('carouselToggle');
 
-    const AUTOPLAY_DELAY = 5000;  // milliseconds between slides
-    const SWIPE_DISTANCE = 50;    // pixels a finger must travel to count as a swipe
+    const AUTOPLAY_DELAY = 5000;  
+    const SWIPE_DISTANCE = 50;    
 
     let currentIndex = 0;
     let autoplayTimer = null;
-    let pausedByVisitor = false;  // true after the visitor presses Pause
+    let pausedByVisitor = false;  
 
-    // With a single slide there is nothing to move
     if (slides.length < 2) {
         previousButton.hidden = true;
         nextButton.hidden = true;
@@ -36,7 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // One round button per slide
     const dots = slides.map((slide, index) => {
         const dot = document.createElement('button');
         dot.type = 'button';
@@ -51,7 +49,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function showSlide(index) {
-        // Wrap around: after the last slide comes the first, and the other way round
         currentIndex = (index + slides.length) % slides.length;
 
         track.style.transform = `translateX(-${currentIndex * 100}%)`;
@@ -60,7 +57,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const isCurrent = slideIndex === currentIndex;
             slide.classList.toggle('is-active', isCurrent);
             slide.setAttribute('aria-hidden', String(!isCurrent));
-            // "inert" keeps the keyboard out of the slides that are not on screen
             slide.inert = !isCurrent;
         });
 
@@ -106,7 +102,6 @@ document.addEventListener('DOMContentLoaded', () => {
         restartAutoplay();
     });
 
-    // The Pause / Play button stops the slideshow until the visitor starts it again
     toggleButton.addEventListener('click', () => {
         pausedByVisitor = !pausedByVisitor;
 
@@ -121,13 +116,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Wait while the visitor is reading a slide
     carousel.addEventListener('mouseenter', stopAutoplay);
     carousel.addEventListener('mouseleave', startAutoplay);
     carousel.addEventListener('focusin', stopAutoplay);
     carousel.addEventListener('focusout', startAutoplay);
 
-    // Pause while the browser tab is in the background
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
             stopAutoplay();
@@ -146,7 +139,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Swiping on phones and tablets
     let touchStartX = null;
 
     carousel.addEventListener('touchstart', (event) => {

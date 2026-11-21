@@ -5,7 +5,6 @@
 // =====================================================================
 
 // ---------- Login state ----------
-// After a successful login the server gives us a token; we keep it in the browser.
 function getToken() {
     return localStorage.getItem('token');
 }
@@ -23,17 +22,12 @@ function isLoggedIn() {
 }
 
 // ---------- CSRF protection ----------
-// The server puts a token in a cookie named "csrf_token". We read it and send it back
-// in the "X-CSRF-Token" header on every request that changes data.
 function getCsrfToken() {
     const match = document.cookie.match(/(?:^|; )csrf_token=([^;]*)/);
     return match ? decodeURIComponent(match[1]) : '';
 }
 
 // ---------- Talking to the server ----------
-// Use apiFetch() instead of fetch(). It adds, automatically:
-//   - the CSRF header on POST / PUT / PATCH / DELETE
-//   - the login token, if the visitor is logged in
 function apiFetch(url, options = {}) {
     const method = (options.method || 'GET').toUpperCase();
     const headers = { ...(options.headers || {}) };
@@ -50,7 +44,6 @@ function apiFetch(url, options = {}) {
     return fetch(url, { ...options, headers });
 }
 
-// Turns an error answer from the server into one readable sentence.
 async function readErrorMessage(response, fallback = 'Something went wrong. Please try again.') {
     try {
         const data = await response.json();
@@ -59,7 +52,6 @@ async function readErrorMessage(response, fallback = 'Something went wrong. Plea
             return data.detail;
         }
 
-        // Validation errors arrive as a list, one entry per wrong field
         if (Array.isArray(data.detail)) {
             return data.detail
                 .map((problem) => {
@@ -69,15 +61,12 @@ async function readErrorMessage(response, fallback = 'Something went wrong. Plea
                 .join(' ');
         }
     } catch (error) {
-        // The answer was not JSON; use the fallback below
     }
 
     return fallback;
 }
 
 // ---------- Messages ----------
-// Shows a message box. "type" is 'error' or 'success'. The text is always inserted
-// as plain text, never as HTML, so it cannot be used to inject code into the page.
 function showMessage(element, text, type = 'error') {
     if (!element) {
         return;
@@ -95,8 +84,6 @@ function hideMessage(element) {
 }
 
 // ---------- Visitor or logged-in user ----------
-// Elements marked data-auth="guest" are for visitors, data-auth="user" for logged-in users.
-// Call this again whenever the login state changes (for example when the token has expired).
 function applyAuthState() {
     const loggedIn = isLoggedIn();
 
@@ -113,7 +100,6 @@ function applyAuthState() {
 document.addEventListener('DOMContentLoaded', () => {
     applyAuthState();
 
-    // Highlight the menu link of the page we are on
     document.querySelectorAll('.site-nav .nav-link').forEach((link) => {
         if (link.getAttribute('href') === window.location.pathname) {
             link.classList.add('is-current');
@@ -129,7 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // The three-line button opens and closes the menu on phones
     const navToggle = document.getElementById('navToggle');
     const siteNav = document.getElementById('siteNav');
 

@@ -45,13 +45,12 @@ app.include_router(books_router)
 app.include_router(categories_router)
 app.include_router(auth_router)
 
-# Changing this number makes browsers download the CSS and JS files again instead of using old copies.
 ASSET_VERSION = "2.5"
 templates.env.globals["asset_version"] = ASSET_VERSION
 
 NO_COVER_IMAGE = "/static/img/no-cover.svg"
-FEATURED_BOOKS_COUNT = 5   # slides in the home page carousel
-MORE_BOOKS_COUNT = 5       # books shown under it
+FEATURED_BOOKS_COUNT = 5   
+MORE_BOOKS_COUNT = 5       
 
 def book_for_page(book: Book) -> dict:
     """The fields of a book that the page templates show."""
@@ -66,7 +65,7 @@ def book_for_page(book: Book) -> dict:
         "in_stock": (book.stock or 0) > 0,
         "is_digital": bool(book.is_digital),
         "has_digital_file": bool(book.digital_file_url),
-        "ebook_price": f"{get_ebook_price(book):.2f}" if book.digital_file_url else None,
+        "ebook_price": f"{get_ebook_price(book.price):.2f}" if book.digital_file_url else None,
         "category_id": book.category_id,
         "category_name": book.category.name if book.category else None,
     }
@@ -147,7 +146,6 @@ def read_book(book_id: int, request: Request, db: Session = Depends(get_db)):
 
     page_book = book_for_page(book)
 
-    # The short text search engines show under the page title
     meta_description = f"{book.title} by {book.author_name}. {book.description or ''}".strip()
     if len(meta_description) > 155:
         meta_description = meta_description[:152].rstrip() + "..."

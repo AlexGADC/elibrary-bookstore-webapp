@@ -83,7 +83,7 @@ def get_current_admin_user(current_user: User = Depends(get_current_user), db: S
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have enough privileges for this action."
         )
-        w
+
     user_role = db.query(Role).filter(Role.id == current_user.role_id).first()
     
     if not user_role or user_role.name.lower() != "admin":

@@ -156,13 +156,13 @@ def test_rate_limit_blocks_after_100_requests():
             assert client.get("/catalog").status_code == 200
             assert client.get("/books/999999").status_code == 404
 
-        blocked = client.get("/books/")  # request 101
+        blocked = client.get("/books/")  
         assert blocked.status_code == 429
         assert 1 <= int(blocked.headers["Retry-After"]) <= 61
         assert "Too many requests" in blocked.json()["detail"]
-        assert "X-Frame-Options" in blocked.headers  # blocked responses keep the security headers
+        assert "X-Frame-Options" in blocked.headers  
     finally:
-        reset_rate_limits()  # do not leave the test client blocked
+        reset_rate_limits() 
 
 # Test 11: Authorization - a logged-in user who is not an admin cannot add books
 def test_normal_user_cannot_create_book():
@@ -246,9 +246,8 @@ def test_docs_shortcut_needs_the_setting(monkeypatch):
 
     monkeypatch.setattr(captcha, "ALLOW_DOCS_LOGIN", True)
     response = client.post("/auth/login", data=wrong_login, headers=from_docs_page)
-    assert response.status_code == 401  # CAPTCHA skipped, so the password was checked
+    assert response.status_code == 401  
 
-    # A request that only mentions /docs from another website is not accepted as the docs page
     response = client.post("/auth/login", data=wrong_login, headers={"Referer": "http://evil.example/docs"})
     assert response.status_code == 400
 
@@ -269,19 +268,16 @@ def test_my_transactions_requires_login():
 
 # Test 18: Payments - a paid checkout cannot be used to confirm a different purchase
 def test_payment_must_belong_to_the_purchase(monkeypatch):
-    # Built with Stripe's own class, so the test sees exactly what the real Stripe library returns
     paid_checkout = stripe.StripeObject.construct_from(
         {"payment_status": "paid", "amount_total": 3990, "metadata": {"transaction_id": "999999"}},
         "sk_test_fake"
     )
     monkeypatch.setattr("app.api.books.stripe.checkout.Session.retrieve", lambda session_id: paid_checkout)
 
-    # A different purchase than the one the checkout was created for: refused
     response = client.get("/books/payment-success", params={"session_id": "cs_test_fake", "transaction_id": 6})
     assert response.status_code == 400
     assert "does not belong" in response.json()["detail"]
 
-    # The matching purchase passes that check (it then stops only because purchase 999999 does not exist)
     response = client.get("/books/payment-success", params={"session_id": "cs_test_fake", "transaction_id": 999999})
     assert response.status_code == 404
     assert response.json()["detail"] == "Transaction not found."
@@ -289,9 +285,9 @@ def test_payment_must_belong_to_the_purchase(monkeypatch):
 
 # Test 19: E-books - the e-book costs half the printed price, rounded to two decimals
 def test_ebook_price_is_half_the_printed_price():
-    assert get_ebook_price(SimpleNamespace(price=Decimal("39.90"))) == Decimal("19.95")
-    assert get_ebook_price(SimpleNamespace(price=Decimal("44.90"))) == Decimal("22.45")
-    assert get_ebook_price(SimpleNamespace(price=Decimal("29.99"))) == Decimal("15.00")  # 14.995 rounds up
+    assert get_ebook_price(Decimal("39.90")) == Decimal("19.95")
+    assert get_ebook_price(Decimal("44.90")) == Decimal("22.45")
+    assert get_ebook_price(Decimal("29.99")) == Decimal("15.00")  # 14.995 rounds up
 
 
 # Test 20: Authorization - buying an e-book needs a login

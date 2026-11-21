@@ -49,12 +49,12 @@ def get_site_url(request: Request) -> str:
     return f"{scheme}://{host}"
 
 
-# An e-book costs half the price of the printed book.
+# Prices are Decimal everywhere, the same type the database gives us. Decimal keeps money exact;
+# float does not (with float, half of 29.99 gets rounded to 14.99 instead of 15.00).
 EBOOK_PRICE_SHARE = Decimal("0.5")
 
-def get_ebook_price(book: Book) -> Decimal:
+def get_ebook_price(printed_price: Decimal) -> Decimal:
     """The price of the e-book edition: half the printed price, rounded to two decimals."""
-    printed_price = Decimal(str(book.price))
     return (printed_price * EBOOK_PRICE_SHARE).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
@@ -64,7 +64,7 @@ def create_checkout(request: Request, book: Book, transaction: LoanPurchase, pri
     The transaction ID is stored inside the checkout, so the payment can later be matched to it.
     """
     site_url = get_site_url(request)
-    price_in_bani = int((Decimal(str(price)) * 100).to_integral_value(rounding=ROUND_HALF_UP))
+    price_in_bani = int((price * 100).to_integral_value(rounding=ROUND_HALF_UP))
 
     return stripe.checkout.Session.create(
         line_items=[{
@@ -156,10 +156,6 @@ def payment_success_endpoint(
         checkout_session = stripe.checkout.Session.retrieve(session_id)
         
         if checkout_session.payment_status == "paid":
-            # The payment must belong to THIS purchase. When the checkout was created we stored the
-            # transaction ID inside it; without this check, one paid checkout could be reused to
-            # mark any other pending purchase as paid.
-            # (Stripe gives us an object here, not a dictionary, so the value is read with getattr.)
             paid_transaction_id = getattr(checkout_session.metadata, "transaction_id", None)
             if str(paid_transaction_id) != str(transaction_id):
                 logger.warning(f"PAYMENT MISMATCH: Checkout session {session_id} was used for transaction ID {transaction_id}, but it belongs to {paid_transaction_id}.")
@@ -434,12 +430,9 @@ def download_digital_file(
             detail="This book has no digital file."
         )
 
-    # The files in uploads/files are not public, so this is the only way to get one.
     user_role = db.query(Role).filter(Role.id == current_user.role_id).first()
     is_admin = user_role is not None and user_role.name.lower() == "admin"
 
-    # Only people who bought the E-BOOK may download it. Buying the printed book or borrowing
-    # the book does not include the digital edition.
     owns_ebook = db.query(LoanPurchase).filter(
         LoanPurchase.user_id == current_user.id,
         LoanPurchase.book_id == book_id,
@@ -463,7 +456,6 @@ def download_digital_file(
 
     logger.info(f"FILE DOWNLOADED: User {current_user.email} downloaded the digital file for book ID: {book_id}.")
 
-    # "no-store" tells the browser not to keep a copy, so every download is checked by the server.
     return FileResponse(
         file_path,
         filename=os.path.basename(file_path),
@@ -568,7 +560,7 @@ def buy_ebook_endpoint(
 
     transaction = transaction_repo.buy_ebook(db=db, user_id=current_user.id, book_id=book_id)
 
-    ebook_price = get_ebook_price(book)
+    ebook_price = get_ebook_price(book.price)
     checkout_session = create_checkout(request, book, transaction, ebook_price, f"{book.title} (e-book)")
 
     logger.info(f"CHECKOUT INITIATED: User {current_user.email} started buying the e-book of book ID: {book_id} for {ebook_price} RON (Transaction ID: {transaction.id}).")

@@ -17,7 +17,6 @@
         <span aria-current="page">{{ book.title }}</span>
     </nav>
 
-    <!-- book.js reads the data-... values below to know which book this page is about -->
     <article class="book-detail" id="bookDetail"
              data-book-id="{{ book.id }}"
              data-book-title="{{ book.title }}"
@@ -49,14 +48,12 @@
             <p class="book-detail-description">{{ book.description }}</p>
             {% endif %}
 
-            <!-- Messages after an action ("Borrowed!", errors ...) -->
             <div class="alert" id="bookMessage" role="status" aria-live="polite" hidden></div>
 
-            <!-- What the logged-in visitor already has: "You own this book", "Borrowed until ..." -->
+
             <div class="alert alert-info" id="ownershipNote" hidden></div>
 
             <div class="book-actions">
-                <!-- Visitors who are not logged in -->
                 <div class="guest-box" data-auth="guest">
                     <p>Log in to borrow or buy this book.</p>
                     <div class="button-row">
@@ -65,7 +62,7 @@
                     </div>
                 </div>
 
-                <!-- Logged-in users: book.js shows only the buttons that make sense right now -->
+              
                 <div class="button-row">
                     <button class="btn btn-primary" id="borrowBtn" type="button" hidden>Borrow for 14 days</button>
                     <button class="btn btn-success" id="buyBtn" type="button" hidden>{{ 'Buy printed book' if book.has_digital_file else 'Buy' }} for {{ book.price }} RON</button>

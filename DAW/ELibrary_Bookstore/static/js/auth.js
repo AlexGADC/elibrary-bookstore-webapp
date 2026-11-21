@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const messageBox = document.getElementById('formMessage');
     const submitButton = document.getElementById('submitBtn');
 
-    // Reads the answer of the "I'm not a robot" box. Returns '' if it was not ticked.
     function getCaptchaAnswer() {
         if (typeof grecaptcha === 'undefined' || typeof grecaptcha.getResponse !== 'function') {
             return '';
@@ -21,14 +20,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Disables the button while we wait for the server, so the form is not sent twice
     function setBusy(isBusy, busyText, normalText) {
         submitButton.disabled = isBusy;
         submitButton.textContent = isBusy ? busyText : normalText;
     }
 
-    // A link such as /login?next=/book/5 brings the visitor back to that page after logging in.
-    // Only addresses inside this site are accepted ("/something"), never another website.
     function getPageAfterLogin() {
         const next = new URLSearchParams(window.location.search).get('next');
         const isLocalPage = next && next.startsWith('/') && !next.startsWith('//') && !next.includes('\\');
@@ -39,7 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm');
 
     if (loginForm) {
-        // Coming from the create-account page: confirm the account exists
         if (new URLSearchParams(window.location.search).get('registered') === '1') {
             showMessage(messageBox, 'Your account was created. You can log in now.', 'success');
         }

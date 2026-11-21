@@ -9,8 +9,6 @@
 
 /* ---------- Tablet ---------- */
 @media (max-width: 1024px) {
-    /* Only left and right: writing "padding: 0 20px" here would also wipe out
-       the top and bottom spacing that .page-section adds to the same element. */
     .container {
         padding-left: 20px;
         padding-right: 20px;
@@ -29,7 +27,6 @@
         grid-template-columns: 1fr 1fr;
     }
 
-    /* The search box takes the whole first row */
     .catalog-filters .form-group:first-child {
         grid-column: 1 / -1;
     }
@@ -83,7 +80,6 @@
 
 /* ---------- Phone ---------- */
 @media (max-width: 767px) {
-    /* The menu collapses behind the three-line button */
     .nav-toggle {
         display: block;
     }
@@ -134,7 +130,6 @@
         padding: 14px;
     }
 
-    /* As many columns as fit: two on a phone, three or four on a wider screen */
     .book-grid {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
         gap: 14px;
@@ -174,7 +169,6 @@
         font-size: 1rem;
     }
 
-    /* On a phone the cover goes above the text and everything is centred */
     .slide-content {
         grid-template-columns: 1fr;
         justify-items: center;
@@ -197,7 +191,6 @@
         font-size: 0.95rem;
     }
 
-    /* The arrows move up next to the cover, so they do not sit on top of the text */
     .carousel-arrow {
         top: 131px;
         width: 40px;
@@ -216,7 +209,6 @@
         grid-template-columns: 1fr;
     }
 
-    /* On a phone the cover sits above the text */
     .book-detail {
         grid-template-columns: 1fr;
         gap: 20px;
@@ -247,7 +239,6 @@
     }
 }
 
-/* ---------- Small phone ---------- */
 @media (max-width: 480px) {
     .container {
         padding-left: 14px;
@@ -270,7 +261,6 @@
         padding: 22px 14px;
     }
 
-    /* The reCAPTCHA box has a fixed width of 304px; shrink it so it fits narrow screens */
     .captcha-container {
         min-height: 68px;
     }

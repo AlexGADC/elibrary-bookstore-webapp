@@ -20,8 +20,6 @@ from app.core.logger import logger
 
 RATE_LIMIT = parse("100/minute")
 
-# Files a page loads by itself (CSS, JS, images) are not counted,
-# otherwise simply opening the catalog would use up a large part of the limit.
 NOT_COUNTED_PREFIXES = ("/static/", "/uploads/covers/")
 
 _storage = MemoryStorage()
@@ -39,7 +37,6 @@ async def rate_limit_middleware(request: Request, call_next):
 
     client_ip = request.client.host if request.client else "unknown"
 
-    # hit() adds 1 to this IP's counter and returns False once the limit is exceeded.
     if not _rate_limiter.hit(RATE_LIMIT, client_ip):
         window_end = _rate_limiter.get_window_stats(RATE_LIMIT, client_ip).reset_time
         retry_after = max(1, int(window_end - time.time()) + 1)

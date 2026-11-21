@@ -18,14 +18,12 @@ from fastapi import HTTPException, Request, status
 
 load_dotenv()
 
-# Google's published test keys (public, the same for everybody).
 TEST_SITE_KEY = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
 TEST_SECRET_KEY = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
 
 _site_key = os.getenv("RECAPTCHA_SITE_KEY", "").strip()
 _secret_key = os.getenv("RECAPTCHA_SECRET_KEY", "").strip()
 
-# The two keys only work as a pair, so the real ones are used only when both are set.
 USING_REAL_KEYS = bool(_site_key and _secret_key)
 
 RECAPTCHA_SITE_KEY = _site_key if USING_REAL_KEYS else TEST_SITE_KEY
@@ -33,10 +31,6 @@ RECAPTCHA_SECRET_KEY = _secret_key if USING_REAL_KEYS else TEST_SECRET_KEY
 
 VERIFY_URL = "https://www.google.com/recaptcha/api/siteverify"
 
-# Development shortcut: Swagger (/docs) has nowhere to show a CAPTCHA box, so with
-# ALLOW_DOCS_LOGIN=true in .env, login and registration made from the /docs page skip the CAPTCHA.
-# It is OFF unless that line is present. Leave it off when the site is presented or hosted,
-# because a script can pretend to be the /docs page.
 ALLOW_DOCS_LOGIN = os.getenv("ALLOW_DOCS_LOGIN", "").strip().lower() in ("1", "true", "yes", "on")
 DOCS_PATHS = ("/docs", "/redoc")
 

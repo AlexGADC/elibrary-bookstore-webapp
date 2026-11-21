@@ -30,11 +30,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const borrowButton = document.getElementById('borrowBtn');
     const buyButton = document.getElementById('buyBtn');
-    const buyEbookButton = document.getElementById('buyEbookBtn');  // only exists if the book has an e-book
+    const buyEbookButton = document.getElementById('buyEbookBtn');  
     const returnButton = document.getElementById('returnBtn');
     const downloadButton = document.getElementById('downloadBtn');
 
-    // The logged-in user's loans and purchases of THIS book (empty for visitors)
     let myTransactions = [];
 
     function formatDate(isoText) {
@@ -53,7 +52,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return myTransactions.some((item) => item.type === 'buy_ebook' && item.status === 'completed');
     }
 
-    // Shows only the buttons that make sense for this visitor right now
     function updatePage() {
         const loggedIn = isLoggedIn();
         const activeLoan = findActiveLoan();
@@ -100,7 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
         ownershipNote.hidden = notes.length === 0;
     }
 
-    // The login token can expire. If the server no longer accepts it, go back to the visitor view.
     function handleExpiredLogin() {
         clearToken();
         applyAuthState();
@@ -144,7 +141,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updatePage();
     }
 
-    // Runs one action (borrow, return ...) with the button disabled while the server answers
     async function runAction(button, busyText, action) {
         const normalText = button.textContent;
         button.disabled = true;
@@ -204,8 +200,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }));
 
     // ---------- Buy (printed book or e-book) ----------
-    // The server creates a Stripe payment page and gives us its address; we send the visitor there.
-    // After paying, Stripe sends them back to /payment/success.
     async function startPayment(buyAddress) {
         const response = await apiFetch(buyAddress, { method: 'POST' });
 
@@ -240,8 +234,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ---------- Download the e-book ----------
-    // The file is protected, so a plain link would not work: the request needs the login token.
-    // We fetch the file with the token and then hand it to the browser to save.
     downloadButton.addEventListener('click', () => runAction(downloadButton, 'Preparing the file...', async () => {
         const response = await apiFetch(`/books/${bookId}/download`, { cache: 'no-store' });
 
@@ -257,7 +249,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const fileContent = await response.blob();
 
-        // Keep the file type the server sent (.pdf or .epub), but name the file after the book
         const serverName = (response.headers.get('Content-Disposition') || '').match(/filename="?([^";]+)"?/);
         const extension = serverName && serverName[1].includes('.') ? serverName[1].slice(serverName[1].lastIndexOf('.')) : '.pdf';
         const safeTitle = bookTitle.replace(/[\\/:*?"<>|]/g, '').trim() || 'book';
@@ -274,7 +265,6 @@ document.addEventListener('DOMContentLoaded', () => {
         showMessage(messageBox, 'Your download has started.', 'success');
     }));
 
-    // Coming back from Stripe after pressing "back" or "cancel" on the payment page
     if (new URLSearchParams(window.location.search).get('payment') === 'cancelled') {
         showMessage(messageBox, 'The payment was cancelled. You have not been charged.', 'info');
     }

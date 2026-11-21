@@ -14,7 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const PLACEHOLDER_COVER = '/static/img/no-cover.svg';
 
-    // Puts one line of text in the grid (loading, nothing found ...)
     function showGridNote(text) {
         const note = document.createElement('p');
         note.className = 'grid-note';
@@ -41,8 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return badge;
     }
 
-    // XSS protection: the card is built with createElement and textContent, never innerHTML,
-    // so whatever is stored in a book's title or author is always shown as plain text.
     function createBookCard(book) {
         const card = document.createElement('article');
         card.className = 'book-card';
@@ -67,7 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const info = document.createElement('div');
         info.className = 'book-info';
 
-        // The title is a link to the book's page; CSS stretches it over the whole card
         const title = document.createElement('h2');
         title.className = 'book-title';
 
@@ -167,7 +163,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Wait until the visitor stops typing before searching, so we do not send a request per letter
     let searchTimer = null;
     searchInput.addEventListener('input', () => {
         clearTimeout(searchTimer);
@@ -181,8 +176,6 @@ document.addEventListener('DOMContentLoaded', () => {
         loadBooks();
     });
 
-    // Links such as /catalog?search=1984 or /catalog?category_id=2 (used on the home page)
-    // open the catalog with that search or category already applied.
     async function start() {
         const addressParams = new URLSearchParams(window.location.search);
 
